@@ -162,7 +162,7 @@
       <div><strong>Evidence</strong> · Screenshots captured from the running UI and the Azure portal</div>
     </div>
   </div>
-  <div class="cover-foot">Product service · Order service · Pet service · React storefront · PostgreSQL · Blob Storage · Key Vault</div>
+  <div class="cover-foot">Product service · Order service · Pet service · React storefront · PostgreSQL · Blob Storage · Key Vault · Container Registry</div>
 </section>
 
 <section>
@@ -179,6 +179,7 @@
       <tr><td>Database</td><td>Azure Database for PostgreSQL Flexible Server, database <span class="mono">petstore</span></td><td>Figure 7, Figure 8</td></tr>
       <tr><td>Images</td><td>Azure Blob Storage account <span class="mono">petstore</span>, container <span class="mono">pet-container</span></td><td>Figure 9, Figure 10</td></tr>
       <tr><td>Secrets</td><td>Key Vault <span class="mono">db-credentials-petstore</span>. No database password, connection string, or account key in application YAML</td><td>Figure 11, Figure 12</td></tr>
+      <tr><td>Container images</td><td>Azure Container Registry <span class="mono">petstoreazurecontainerregistry</span>. GitHub Actions pushes four images on every push to <span class="mono">main</span></td><td>Figure 13, Figure 14, Figure 15, Figure 16</td></tr>
     </tbody>
   </table>
   <div class="grid">
@@ -200,6 +201,7 @@
       <tr><td>All three services</td><td>Key Vault <span class="mono">db-credentials-petstore</span></td><td>Database username and password</td></tr>
       <tr><td>product-service</td><td>Blob container <span class="mono">pet-container</span></td><td>Upload, replace, and delete pet photos</td></tr>
       <tr><td>All three services</td><td>PostgreSQL <span class="mono">petstore-server-name</span></td><td>Database <span class="mono">petstore</span></td></tr>
+      <tr><td>GitHub Actions on <span class="mono">main</span></td><td>Container Registry <span class="mono">petstoreazurecontainerregistry</span></td><td>Build and store the four application images</td></tr>
     </tbody>
   </table>
   <h3>Application accounts</h3>
@@ -330,7 +332,51 @@
 </section>
 
 <section class="section">
-  <h2>9. Run the project</h2>
+  <h2>9. Azure Container Registry</h2>
+  <p>Each application already has a Dockerfile. A push to the <span class="mono">main</span> branch of <span class="mono">amirrahi29/Petstore-Microservice-App-SpringBoot-React</span> builds all four images and stores them in Azure Container Registry. The registry login server is <span class="mono">petstoreazurecontainerregistry.azurecr.io</span>.</p>
+  <table>
+    <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Registry</td><td>petstoreazurecontainerregistry</td></tr>
+      <tr><td>Login server</td><td>petstoreazurecontainerregistry.azurecr.io</td></tr>
+      <tr><td>Resource group</td><td>Petstore-Resource-Group</td></tr>
+      <tr><td>Subscription</td><td>Petstore subscription · b5c67bf9-6f36-431b-82ea-a27d96f61190</td></tr>
+      <tr><td>Location</td><td>India South Central</td></tr>
+      <tr><td>SKU</td><td>Basic. Provisioning succeeded on 22 October 2026.</td></tr>
+      <tr><td>Sign-in from GitHub</td><td>OpenID Connect. The workflow does not store a registry password.</td></tr>
+    </tbody>
+  </table>
+  <figure class="figure">
+    <img src="figures/container-registry1.jpg" alt="Azure Container Registry overview for petstoreazurecontainerregistry" />
+    <figcaption><strong>Figure 13.</strong> Registry overview. One registry is in the Petstore resource group, on the Basic plan, in India South Central.</figcaption>
+  </figure>
+  <p>The repository name is the service name with <span class="mono">-image</span> on the end. Each repository has two tags: <span class="mono">latest</span>, and the git commit that built it.</p>
+  <table>
+    <thead><tr><th>Application</th><th>Image</th><th>Port inside the image</th></tr></thead>
+    <tbody>
+      <tr><td>product-service</td><td>product-service-image</td><td>8081</td></tr>
+      <tr><td>order-service</td><td>order-service-image</td><td>8083</td></tr>
+      <tr><td>pet-service</td><td>pet-service-image</td><td>8082</td></tr>
+      <tr><td>petstore-ui</td><td>petstore-ui-image</td><td>80</td></tr>
+    </tbody>
+  </table>
+  <figure class="figure">
+    <img src="figures/container-registry2.jpg" alt="Four repositories in the container registry" />
+    <figcaption><strong>Figure 14.</strong> Repositories in the registry: <span class="mono">order-service-image</span>, <span class="mono">pet-service-image</span>, <span class="mono">petstore-ui-image</span>, and <span class="mono">product-service-image</span>.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/container-registry3.jpg" alt="Tags latest and the commit sha on pet-service-image" />
+    <figcaption><strong>Figure 15.</strong> <span class="mono">pet-service-image</span> has two tags, <span class="mono">latest</span> and the commit <span class="mono">39c7d5d</span>. The same pair is published for the other three images.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/container-registry4.jpg" alt="OCI image manifest for the pet-service-image commit tag" />
+    <figcaption><strong>Figure 16.</strong> Manifest for <span class="mono">petstoreazurecontainerregistry.azurecr.io/pet-service-image:39c7d5d9d16c5881d0ec3490cc54a14afa1dce4e</span>. The image is a Linux amd64 OCI index.</figcaption>
+  </figure>
+  <div class="note">The four workflow files live in <span class="mono">.github/workflows</span>. A push to <span class="mono">main</span> starts all of them. While a build is running, GitHub shows a yellow status on the commit. It turns green when that image is in the registry.</div>
+</section>
+
+<section class="section">
+  <h2>10. Run the project</h2>
   <p>Java 21, Maven, Node 20, and an Azure CLI login are enough on a developer machine. The database and the blob account are already in Azure. From each service directory:</p>
   <pre class="cmd">java -jar target/product-service-0.1.0.jar --spring.config.additional-location=file:./src/main/resources/application.yml
 
@@ -354,6 +400,10 @@ java -jar target/pet-service-0.1.0.jar --spring.config.additional-location=file:
       <tr><td>blob2-img.png</td><td>10</td><td>Uploaded pet images</td></tr>
       <tr><td>key-vault1.png</td><td>11</td><td>Vault in the subscription</td></tr>
       <tr><td>key-vault2.png</td><td>12</td><td>The four enabled secrets</td></tr>
+      <tr><td>container-registry1.png</td><td>13</td><td>Container registry overview</td></tr>
+      <tr><td>container-registry2.png</td><td>14</td><td>The four image repositories</td></tr>
+      <tr><td>container-registry3.png</td><td>15</td><td>latest and commit tags</td></tr>
+      <tr><td>container-registry4.png</td><td>16</td><td>Image manifest for pet-service-image</td></tr>
     </tbody>
   </table>
   <p class="small">Source screenshots remain in the project folder <span class="mono">screenshots/</span>. This report uses those files. Secret values are not printed.</p>
