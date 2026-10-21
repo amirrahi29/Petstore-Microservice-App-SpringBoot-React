@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>PetStore — Implementation Report</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    color: #1c241e;
+    font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.45;
+    background: white;
+  }
+  h1, h2, h3 { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-weight: 600; color: #143d28; margin: 0 0 8px; }
+  h1 { font-size: 22pt; letter-spacing: -0.02em; }
+  h2 { font-size: 16pt; margin-top: 0; page-break-after: avoid; }
+  h3 { font-size: 12.5pt; margin-top: 14px; }
+  p { margin: 0 0 8px; }
+  ul { margin: 4px 0 10px; padding-left: 18px; }
+  li { margin: 2px 0; }
+  .cover {
+    page-break-after: always;
+    height: 297mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background:
+      linear-gradient(165deg, #145536 0%, #1f7a4d 42%, #2e9a64 100%);
+    color: #f7f4ee;
+    margin: 0;
+    padding: 22mm 18mm 16mm;
+  }
+  body > section:not(.cover) {
+    padding: 14mm 14mm 12mm;
+  }
+  .cover .kicker {
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-size: 9.5pt;
+    color: #d7efe3;
+  }
+  .cover h1 {
+    color: white;
+    font-size: 42pt;
+    line-height: 0.95;
+    margin: 10px 0 8px;
+  }
+  .cover .sub {
+    font-size: 15pt;
+    max-width: 130mm;
+    color: #e7f6ee;
+    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  }
+  .rule { height: 1px; background: rgba(255,255,255,0.35); margin: 18px 0; width: 46mm; }
+  .meta { font-size: 10.5pt; line-height: 1.6; color: #e7f6ee; }
+  .meta strong { color: white; font-weight: 600; }
+  .cover-foot { font-size: 9.5pt; color: #d7efe3; }
+  .section { page-break-before: always; }
+  .lede { font-size: 12pt; color: #24352b; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 12px;
+    font-size: 9.6pt;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 6px 8px;
+    border-bottom: 1px solid #e4ddd2;
+  }
+  th {
+    background: #f4f1ea;
+    color: #145536;
+    font-weight: 600;
+    border-bottom: 2px solid #1f7a4d;
+  }
+  .tag {
+    display: inline-block;
+    background: #e7f4ec;
+    color: #145536;
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-size: 8.5pt;
+    font-weight: 600;
+  }
+  .figure {
+    margin: 8px 0 14px;
+    page-break-inside: avoid;
+  }
+  .figure img {
+    width: 100%;
+    max-height: 195mm;
+    object-fit: contain;
+    object-position: top center;
+    background: #f7f4ee;
+    border: 1px solid #e4ddd2;
+    border-radius: 6px;
+    display: block;
+  }
+  .figure figcaption {
+    margin-top: 5px;
+    font-size: 9pt;
+    color: #5c675f;
+  }
+  .figure figcaption strong { color: #145536; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin: 10px 0 12px;
+  }
+  .card {
+    background: #f7f4ee;
+    border-top: 3px solid #1f7a4d;
+    padding: 8px 10px 10px;
+    border-radius: 0 0 6px 6px;
+  }
+  .card h3 { margin: 0 0 4px; font-size: 11pt; }
+  .card p { margin: 0; font-size: 9.2pt; }
+  .note {
+    background: #f7f4ee;
+    border-left: 3px solid #1f7a4d;
+    padding: 8px 12px;
+    margin: 8px 0 12px;
+    font-size: 10pt;
+  }
+  code, .mono { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 9pt; hyphens: none; }
+  pre.cmd {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 8pt;
+    line-height: 1.45;
+    background: #f7f4ee;
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    hyphens: none;
+    margin: 6px 0 10px;
+  }
+  .small { font-size: 9.5pt; color: #3d4a42; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div>
+    <div class="kicker">Project implementation report</div>
+    <h1>PetStore</h1>
+    <div class="sub">A three-service shop for pets, with the catalog, orders, images, and secrets running on Azure.</div>
+    <div class="rule"></div>
+    <div class="meta">
+      <div><strong>Resource group</strong> · Petstore-Resource-Group</div>
+      <div><strong>Subscription</strong> · Petstore subscription</div>
+      <div><strong>Date</strong> · 22 October 2026</div>
+      <div><strong>Evidence</strong> · Screenshots captured from the running UI and the Azure portal</div>
+    </div>
+  </div>
+  <div class="cover-foot">Product service · Order service · Pet service · React storefront · PostgreSQL · Blob Storage · Key Vault</div>
+</section>
+
+<section>
+  <h2>1. What this project covers</h2>
+  <p class="lede">PetStore is a small shop in which every pet is a product for sale. A visitor can browse, filter, and open a pet without signing in. Buying, order history, and administration are signed-in flows. The browser talks to two APIs. A third service shares the same database and the same secret source.</p>
+  <table>
+    <thead>
+      <tr><th>Area</th><th>What is in place</th><th>Shown by</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Storefront</td><td>Catalog, category chips, details, cart drawer, checkout</td><td>Figure 1, Figure 2</td></tr>
+      <tr><td>Customer account</td><td>Separate shop session, order history, logout</td><td>Figure 3</td></tr>
+      <tr><td>Administration</td><td>Categories, pets with a required photo, all orders, delete</td><td>Figure 4, Figure 5, Figure 6</td></tr>
+      <tr><td>Database</td><td>Azure Database for PostgreSQL Flexible Server, database <span class="mono">petstore</span></td><td>Figure 7, Figure 8</td></tr>
+      <tr><td>Images</td><td>Azure Blob Storage account <span class="mono">petstore</span>, container <span class="mono">pet-container</span></td><td>Figure 9, Figure 10</td></tr>
+      <tr><td>Secrets</td><td>Key Vault <span class="mono">db-credentials-petstore</span>. No database password, connection string, or account key in application YAML</td><td>Figure 11, Figure 12</td></tr>
+    </tbody>
+  </table>
+  <div class="grid">
+    <div class="card"><h3>product-service</h3><p>Port 8081. Pets for sale, categories, and image upload. Reads the database username and password, plus the blob connection string and account key, from Key Vault.</p></div>
+    <div class="card"><h3>order-service</h3><p>Port 8083. Register, login, checkout, and orders. Issues the JWT. Makes sure the admin account exists. Reads the database username and password from Key Vault.</p></div>
+    <div class="card"><h3>pet-service</h3><p>Port 8082. Pet API on the same database. Reads the database username and password from the same vault. The shop UI sells through the product service.</p></div>
+  </div>
+  <p>The React application runs on port 3000. Swagger is available at <span class="mono">http://localhost:8081/swagger-ui.html</span> and <span class="mono">http://localhost:8083/swagger-ui.html</span>.</p>
+</section>
+
+<section class="section">
+  <h2>2. How the pieces fit</h2>
+  <p>The browser keeps the cart in local storage. Login is issued by the order service. The product service trusts the same JWT. Shop and admin sessions are stored separately, so signing in as a customer does not sign the administrator out.</p>
+  <table>
+    <thead><tr><th>Caller</th><th>Calls</th><th>For</th></tr></thead>
+    <tbody>
+      <tr><td>Storefront and admin UI</td><td>product-service <span class="mono">:8081</span></td><td>Categories, pets, photos</td></tr>
+      <tr><td>Storefront and admin UI</td><td>order-service <span class="mono">:8083</span></td><td>Register, login, checkout, orders</td></tr>
+      <tr><td>All three services</td><td>Key Vault <span class="mono">db-credentials-petstore</span></td><td>Database username and password</td></tr>
+      <tr><td>product-service</td><td>Blob container <span class="mono">pet-container</span></td><td>Upload, replace, and delete pet photos</td></tr>
+      <tr><td>All three services</td><td>PostgreSQL <span class="mono">petstore-server-name</span></td><td>Database <span class="mono">petstore</span></td></tr>
+    </tbody>
+  </table>
+  <h3>Application accounts</h3>
+  <p>These are shop accounts stored in the database. They are not the Azure or database secrets.</p>
+  <table>
+    <thead><tr><th>Username</th><th>Password</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td>demo</td><td>demo123</td><td>USER</td></tr>
+      <tr><td>admin</td><td>admin123</td><td>ADMIN</td></tr>
+    </tbody>
+  </table>
+  <div class="note">On startup, Hibernate creates any missing tables (<span class="mono">ddl-auto: update</span>). The order service creates the admin account when that username is missing. It does not reset an existing admin password.</div>
+</section>
+
+<section class="section">
+  <h2>3. Storefront</h2>
+  <p>The public shop is the home page. There is no login wall. Category chips are built from the pets already loaded, so a guest can filter by All, Cat, Dog, or Parrot. Each card shows the photo, category, name, description, and price, with Details and Add to cart. A new pet cannot be saved without an image, which is why every card in the catalog has a photograph.</p>
+  <p>Add to cart asks a guest to sign in. For a signed-in shopper it opens the cart drawer on the same page. Checkout needs a shop login, then clears the cart and opens that customer’s orders.</p>
+  <figure class="figure">
+    <img src="figures/mainui1.jpg" alt="PetStore catalog with category filters and pet cards" />
+    <figcaption><strong>Figure 1.</strong> Storefront at <span class="mono">localhost:3000</span>. Twenty pets, category filters, and a signed-in shopper named amir. The header shows Cart and My account. There is no admin button on the shop.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/mainui2.jpg" alt="Cart drawer with two pets and a checkout total" />
+    <figcaption><strong>Figure 2.</strong> Cart drawer after adding Dog7. Parrot 1 and Dog7 are listed with quantity controls. The total is $759.00 and Checkout stays on this page until the order is placed.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>4. Customer orders</h2>
+  <p>A signed-in customer opens My account and sees only their own orders. The page is a data grid with search, column controls, and paging. Columns are Order, Items, Total, Status, and Placed. Customers cannot delete an order from this page. Delete stays on the admin orders screen.</p>
+  <figure class="figure">
+    <img src="figures/mainui3.jpg" alt="Customer order history for user amir" />
+    <figcaption><strong>Figure 3.</strong> Account page for amir. Order #6 is two cats for $603.00. Order #2 is three pets for $1,199.00. Both are PLACED. Log out is in the account menu, not in the shop header.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>5. Administration</h2>
+  <p>Administration lives at <span class="mono">/admin</span> and uses its own session. The navigation is Categories, Pets, and Orders. The signed-in administrator in these screenshots is <span class="mono">admin</span>. View store returns to the public shop without clearing the admin session.</p>
+  <h3>Categories</h3>
+  <p>Categories are created here before they can be chosen on a pet. The screenshot shows Cat, Dog, and Parrot, which are the same chips on the storefront. Each row can be deleted. The grid has search, filters, density, and export.</p>
+  <figure class="figure">
+    <img src="figures/admin1.jpg" alt="Admin categories page listing Cat, Dog, and Parrot" />
+    <figcaption><strong>Figure 4.</strong> Admin categories. Three categories are in use. The add form is on the same page.</figcaption>
+  </figure>
+  <h3>Pets</h3>
+  <p>The pet list is the catalog the shop sells. Columns are Photo, Name, Category, Description, Price, and Actions. Edit and Delete are on each row. A new pet requires a photo. Uploads go to <span class="mono">pet-container</span>. Replacing a photo deletes the previous blob. Deleting a pet deletes its blob as well.</p>
+  <figure class="figure">
+    <img src="figures/admin2.jpg" alt="Admin pets grid with photos, prices, edit, and delete" />
+    <figcaption><strong>Figure 5.</strong> Admin pets. Parrots and cats are listed with the photograph stored in Blob Storage, a category, a price, and Edit / Delete.</figcaption>
+  </figure>
+  <h3>Orders</h3>
+  <p>Administrators see every order, including the customer id. The same orders that appear on a customer’s account page appear here, with an extra Customer column and a Delete action. Delete is allowed only for the ADMIN role.</p>
+  <figure class="figure">
+    <img src="figures/admin3.jpg" alt="Admin orders grid with customer ids and delete" />
+    <figcaption><strong>Figure 6.</strong> Admin orders. Orders #6 and #2 belong to customer 3. Order #1 belongs to customer 2. Each row can be deleted.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>6. Azure Database for PostgreSQL</h2>
+  <p>All three services use one database, <span class="mono">petstore</span>, on an Azure Database for PostgreSQL flexible server. The server is in the Petstore resource group and is Ready.</p>
+  <table>
+    <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Server</td><td>petstore-server-name</td></tr>
+      <tr><td>Endpoint</td><td>petstore-server-name.postgres.database.azure.com</td></tr>
+      <tr><td>Subscription</td><td>Petstore subscription · b5c67bf9-6f36-431b-82ea-a27d96f61190</td></tr>
+      <tr><td>Resource group</td><td>Petstore-Resource-Group</td></tr>
+      <tr><td>Location</td><td>Central India</td></tr>
+      <tr><td>PostgreSQL</td><td>16</td></tr>
+      <tr><td>Compute</td><td>Burstable B2s · 2 vCores · 4 GiB RAM · 32 GiB storage</td></tr>
+      <tr><td>Administrator login</td><td>amirrahi29</td></tr>
+      <tr><td>High availability</td><td>Not enabled. This tier is aimed at development and test.</td></tr>
+    </tbody>
+  </table>
+  <figure class="figure">
+    <img src="figures/postgressql1.jpg" alt="Azure portal overview of the PostgreSQL flexible server" />
+    <figcaption><strong>Figure 7.</strong> Flexible server overview. Status is Ready. The JDBC URL in each service points at this endpoint and the <span class="mono">petstore</span> database.</figcaption>
+  </figure>
+  <p>pgAdmin is connected to that server as <span class="mono">amirrahi29</span>. The <span class="mono">public</span> schema holds the application tables: <span class="mono">categories</span>, <span class="mono">order_items</span>, <span class="mono">orders</span>, <span class="mono">pets</span>, <span class="mono">products</span>, <span class="mono">roles</span>, and <span class="mono">users</span>. The products query in the screenshot returns the same catalog the storefront shows, twenty rows, with category and description filled in.</p>
+  <figure class="figure">
+    <img src="figures/postgressql2.jpg" alt="pgAdmin showing the petstore tables and products rows" />
+    <figcaption><strong>Figure 8.</strong> Database <span class="mono">petstore</span> on server pet-postgres. <span class="mono">SELECT * FROM public.products ORDER BY id</span> returns the pets for sale.</figcaption>
+  </figure>
+  <div class="note">The database username and password are not written in the service YAML files. Each service reads the Key Vault secrets named <span class="mono">username</span> and <span class="mono">password</span> when it starts, then uses them as <span class="mono">spring.datasource.username</span> and <span class="mono">spring.datasource.password</span>.</div>
+</section>
+
+<section class="section">
+  <h2>7. Azure Blob Storage</h2>
+  <p>Pet photographs are files in the storage account <span class="mono">petstore</span>. The application container is <span class="mono">pet-container</span>. A second container, <span class="mono">$logs</span>, is the storage log container and is not used by the shop.</p>
+  <figure class="figure">
+    <img src="figures/blob1-img.jpg" alt="Storage account petstore with the pet-container" />
+    <figcaption><strong>Figure 9.</strong> Containers on storage account petstore. <span class="mono">pet-container</span> is the container named in the product service. Its anonymous access level in the portal is Blob.</figcaption>
+  </figure>
+  <p>Each upload is stored under a generated file name. The database keeps the blob URL. When the API returns a pet, it adds a short-lived shared access signature so the page can show the image. The expiry configured for that link is 60 minutes. The storage connection string and account key come from the Key Vault secrets <span class="mono">connection-string</span> and <span class="mono">account-key</span>. The account name, blob endpoint, container name, and SAS lifetime stay in configuration because they are not secret values.</p>
+  <figure class="figure">
+    <img src="figures/blob2-img.jpg" alt="Blobs inside pet-container" />
+    <figcaption><strong>Figure 10.</strong> <span class="mono">pet-container</span> holding the pet images. Twenty blobs are listed, created when pets were saved from the admin form.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>8. Azure Key Vault</h2>
+  <p>One vault holds the values the services used to keep in YAML. It is <span class="mono">db-credentials-petstore</span>, in Petstore-Resource-Group, location India South Central, on the Petstore subscription.</p>
+  <figure class="figure">
+    <img src="figures/key-vault1.jpg" alt="Key vault db-credentials-petstore in the Azure portal" />
+    <figcaption><strong>Figure 11.</strong> The vault in the subscription. One vault is in use for this project.</figcaption>
+  </figure>
+  <p>Four secrets are enabled. None of the secret values are stored in the repository.</p>
+  <table>
+    <thead><tr><th>Secret</th><th>Used as</th><th>Services</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mono">username</span></td><td>Database username</td><td>product, order, pet</td></tr>
+      <tr><td><span class="mono">password</span></td><td>Database password</td><td>product, order, pet</td></tr>
+      <tr><td><span class="mono">connection-string</span></td><td>Blob Storage connection string</td><td>product</td></tr>
+      <tr><td><span class="mono">account-key</span></td><td>Blob Storage account key</td><td>product</td></tr>
+    </tbody>
+  </table>
+  <figure class="figure">
+    <img src="figures/key-vault2.jpg" alt="Enabled secrets username, password, connection-string, and account-key" />
+    <figcaption><strong>Figure 12.</strong> Secrets on <span class="mono">db-credentials-petstore</span>. All four are Enabled. The portal confirms <span class="mono">account-key</span> was created.</figcaption>
+  </figure>
+  <h3>How a service reads them</h3>
+  <p>The vault URL is the only Key Vault setting in configuration: <span class="mono">https://db-credentials-petstore.vault.azure.net/</span>. At startup each service signs in with <span class="mono">DefaultAzureCredential</span> and copies the secret values into the Spring environment before the database connection is opened. On a developer machine that credential is an Azure CLI login for an account that has Get permission on secrets. No client secret is written into the YAML.</p>
+  <div class="note">A service that starts without an Azure login stops with a clear error: it could not read the secrets from this vault. It does not fall back to a password in a file. Sign in with <span class="mono">az login</span> as a principal that can get secrets, then start the jars again.</div>
+</section>
+
+<section class="section">
+  <h2>9. Run the project</h2>
+  <p>Java 21, Maven, Node 20, and an Azure CLI login are enough on a developer machine. The database and the blob account are already in Azure. From each service directory:</p>
+  <pre class="cmd">java -jar target/product-service-0.1.0.jar --spring.config.additional-location=file:./src/main/resources/application.yml
+
+java -jar target/order-service-0.1.0.jar --spring.config.additional-location=file:./src/main/resources/application.yml
+
+java -jar target/pet-service-0.1.0.jar --spring.config.additional-location=file:./src/main/resources/application.yml</pre>
+  <p>The extra configuration location makes the source YAML win over the copy packed inside the jar. The UI is <span class="mono">npm run dev</span> in <span class="mono">petstore-ui</span>, which serves <span class="mono">http://localhost:3000</span>. It calls product-service on 8081 and order-service on 8083.</p>
+  <h3>Screenshot index</h3>
+  <table>
+    <thead><tr><th>File</th><th>Figure</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr><td>mainui1.png</td><td>1</td><td>Public catalog, categories, prices, photos</td></tr>
+      <tr><td>mainui2.png</td><td>2</td><td>Cart drawer and checkout</td></tr>
+      <tr><td>mainui3.png</td><td>3</td><td>Customer order history</td></tr>
+      <tr><td>admin1.png</td><td>4</td><td>Category administration</td></tr>
+      <tr><td>admin2.png</td><td>5</td><td>Pet administration with photos</td></tr>
+      <tr><td>admin3.png</td><td>6</td><td>All orders, with delete</td></tr>
+      <tr><td>postgressql1.png</td><td>7</td><td>Flexible server is Ready</td></tr>
+      <tr><td>postgressql2.png</td><td>8</td><td>Tables and product rows</td></tr>
+      <tr><td>blob1-img.png</td><td>9</td><td>Storage account and pet-container</td></tr>
+      <tr><td>blob2-img.png</td><td>10</td><td>Uploaded pet images</td></tr>
+      <tr><td>key-vault1.png</td><td>11</td><td>Vault in the subscription</td></tr>
+      <tr><td>key-vault2.png</td><td>12</td><td>The four enabled secrets</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Source screenshots remain in the project folder <span class="mono">screenshots/</span>. This report uses those files. Secret values are not printed.</p>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://petstore-server-name.postgres.database.azure.com/petstore
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
+app:
+  keyvault:
+    endpoint: https://db-credentials-petstore.vault.azure.net/
+  jwt:
+    secret: petstore-demo-jwt-secret-key-change-me
+  cors:
+    allowed-origins: http://localhost:3000
+  storage:
+    account-name: "petstore"
+    endpoint: "https://petstore.blob.core.windows.net/"
+    container-name: pet-container
+    sas-expiry-minutes: 60

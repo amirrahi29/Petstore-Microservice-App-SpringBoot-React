@@ -1,0 +1,18 @@
+server:
+  port: 8082
+
+spring:
+  datasource:
+    url: jdbc:postgresql://petstore-server-name.postgres.database.azure.com/petstore
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+
+app:
+  keyvault:
+    endpoint: https://db-credentials-petstore.vault.azure.net/
+  jwt:
+    secret: petstore-demo-jwt-secret-key-change-me
+  cors:
+    allowed-origins: http://localhost:3000
