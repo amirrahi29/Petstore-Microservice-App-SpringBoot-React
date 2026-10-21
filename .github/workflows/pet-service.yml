@@ -3,9 +3,6 @@ name: pet-service
 on:
   push:
     branches: [main]
-    paths:
-      - "pet-service/**"
-      - ".github/workflows/pet-service.yml"
   workflow_dispatch:
 
 permissions:

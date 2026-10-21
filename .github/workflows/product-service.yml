@@ -3,9 +3,6 @@ name: product-service
 on:
   push:
     branches: [main]
-    paths:
-      - "product-service/**"
-      - ".github/workflows/product-service.yml"
   workflow_dispatch:
 
 permissions:

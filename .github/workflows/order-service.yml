@@ -3,9 +3,6 @@ name: order-service
 on:
   push:
     branches: [main]
-    paths:
-      - "order-service/**"
-      - ".github/workflows/order-service.yml"
   workflow_dispatch:
 
 permissions:

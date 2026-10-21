@@ -3,9 +3,6 @@ name: petstore-ui
 on:
   push:
     branches: [main]
-    paths:
-      - "petstore-ui/**"
-      - ".github/workflows/petstore-ui.yml"
   workflow_dispatch:
 
 permissions:
