@@ -56,3 +56,4 @@ java -jar target/order-service-0.1.0.jar --spring.config.additional-location=fil
 The UI calls `http://localhost:8081` and `8083`. Override those with `VITE_PRODUCT_API` and `VITE_ORDER_API` if needed.
 
 On startup each service checks PostgreSQL and creates any missing tables (`ddl-auto: update`). The order service also makes sure the admin account exists, even when the other tables are already there.
+  
