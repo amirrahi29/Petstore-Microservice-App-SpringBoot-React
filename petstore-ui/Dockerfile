@@ -3,9 +3,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-ARG VITE_PRODUCT_API=http://localhost:8081
-ARG VITE_PET_API=http://localhost:8082
-ARG VITE_ORDER_API=http://localhost:8083
+ARG VITE_PRODUCT_API=https://product-service-web-app-g7bhexgnaje3brbw.centralindia-01.azurewebsites.net
+ARG VITE_PET_API=https://pet-service-web-app-adgkgbhmfchtfge0.centralindia-01.azurewebsites.net
+ARG VITE_ORDER_API=https://order-service-wep-app-huhhatejg5adc0cr.centralindia-01.azurewebsites.net
 ENV VITE_PRODUCT_API=$VITE_PRODUCT_API
 ENV VITE_PET_API=$VITE_PET_API
 ENV VITE_ORDER_API=$VITE_ORDER_API

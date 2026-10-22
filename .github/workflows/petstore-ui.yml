@@ -39,6 +39,10 @@ jobs:
         with:
           context: petstore-ui
           push: true
+          build-args: |
+            VITE_PRODUCT_API=https://product-service-web-app-g7bhexgnaje3brbw.centralindia-01.azurewebsites.net
+            VITE_PET_API=https://pet-service-web-app-adgkgbhmfchtfge0.centralindia-01.azurewebsites.net
+            VITE_ORDER_API=https://order-service-wep-app-huhhatejg5adc0cr.centralindia-01.azurewebsites.net
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
