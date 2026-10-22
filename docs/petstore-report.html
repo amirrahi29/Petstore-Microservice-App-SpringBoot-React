@@ -6,7 +6,19 @@
 <style>
   @page {
     size: A4;
-    margin: 0;
+    margin: 12mm 13mm 14mm;
+    @bottom-left {
+      content: "PetStore  ·  Implementation report";
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 8pt;
+      color: #6d776f;
+    }
+    @bottom-right {
+      content: counter(page);
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 8pt;
+      color: #145536;
+    }
   }
   * { box-sizing: border-box; }
   html, body {
@@ -20,49 +32,78 @@
   }
   h1, h2, h3 { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-weight: 600; color: #143d28; margin: 0 0 8px; }
   h1 { font-size: 22pt; letter-spacing: -0.02em; }
-  h2 { font-size: 16pt; margin-top: 0; page-break-after: avoid; }
-  h3 { font-size: 12.5pt; margin-top: 14px; }
+  h2 {
+    font-size: 15pt;
+    margin: 16px 0 6px;
+    padding-top: 8px;
+    border-top: 1px solid #e4ddd2;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  h3 { font-size: 12pt; margin-top: 12px; page-break-after: avoid; }
   p { margin: 0 0 8px; }
   ul { margin: 4px 0 10px; padding-left: 18px; }
   li { margin: 2px 0; }
   .cover {
-    page-break-after: always;
-    height: 297mm;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background:
-      linear-gradient(165deg, #145536 0%, #1f7a4d 42%, #2e9a64 100%);
-    color: #f7f4ee;
-    margin: 0;
-    padding: 22mm 18mm 16mm;
+    margin: -12mm -13mm 8px;
+    background: white;
+    color: #1c241e;
   }
-  body > section:not(.cover) {
-    padding: 14mm 14mm 12mm;
+  .mast {
+    background: #143d28;
+    color: #f4f7f5;
+    padding: 9mm 13mm 7mm;
   }
-  .cover .kicker {
-    letter-spacing: 0.22em;
+  .mast-kicker {
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    font-size: 9.5pt;
-    color: #d7efe3;
+    font-size: 8pt;
+    color: #b7d7c6;
+    margin: 0 0 3px;
   }
-  .cover h1 {
+  .mast h1 {
     color: white;
-    font-size: 42pt;
-    line-height: 0.95;
-    margin: 10px 0 8px;
+    font-size: 26pt;
+    line-height: 1;
+    margin: 0;
+    letter-spacing: -0.03em;
   }
-  .cover .sub {
-    font-size: 15pt;
-    max-width: 130mm;
-    color: #e7f6ee;
-    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  .mast .sub {
+    margin: 6px 0 0;
+    max-width: 165mm;
+    font-size: 10.5pt;
+    line-height: 1.4;
+    color: #e4f2ea;
   }
-  .rule { height: 1px; background: rgba(255,255,255,0.35); margin: 18px 0; width: 46mm; }
-  .meta { font-size: 10.5pt; line-height: 1.6; color: #e7f6ee; }
-  .meta strong { color: white; font-weight: 600; }
-  .cover-foot { font-size: 9.5pt; color: #d7efe3; }
-  .section { page-break-before: always; }
+  .cover-body { padding: 6mm 13mm 2mm; }
+  .cover h2 {
+    border-top: 0;
+    margin: 2px 0 6px;
+    padding: 0;
+    font-size: 12pt;
+  }
+  .docctl { margin: 0 0 8px; }
+  .docctl th { width: 34mm; }
+  .toc {
+    columns: 2;
+    column-gap: 8mm;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 8px;
+  }
+  .toc li {
+    break-inside: avoid;
+    padding: 3px 0 4px;
+    border-bottom: 1px solid #e4ddd2;
+    font-size: 9pt;
+  }
+  .toc .n {
+    display: inline-block;
+    width: 6mm;
+    color: #1f7a4d;
+    font-weight: 600;
+  }
+  body > section:not(.cover) { padding: 0; }
   .lede { font-size: 12pt; color: #24352b; }
   table {
     width: 100%;
@@ -155,19 +196,50 @@
 <body>
 
 <section class="cover">
-  <div>
-    <div class="kicker">Project implementation report</div>
-    <h1>PetStore</h1>
-    <div class="sub">A three-service shop for pets. The catalog, orders, images, and secrets run on Azure, and the four applications are published on App Service.</div>
-    <div class="rule"></div>
-    <div class="meta">
-      <div><strong>Resource group</strong> · Petstore-Resource-Group</div>
-      <div><strong>Subscription</strong> · Petstore subscription</div>
-      <div><strong>Date</strong> · 23 October 2026</div>
-      <div><strong>Evidence</strong> · Screenshots captured from the running UI and the Azure portal</div>
-    </div>
+  <header class="mast">
+    <div class="mast-kicker">PetStore · Azure deployment</div>
+    <h1>Implementation report</h1>
+    <p class="sub">Four applications are deployed on App Service. Each one pulls its image from Azure Container Registry. Traffic Manager reports every endpoint Online, and the storefront is live on the UI hostname.</p>
+  </header>
+  <div class="cover-body">
+    <h2>Document control</h2>
+    <table class="docctl">
+      <tbody>
+        <tr><th>Product</th><td>PetStore — catalog, orders, and administration</td></tr>
+        <tr><th>Date</th><td>23 October 2026</td></tr>
+        <tr><th>Resource group</th><td>Petstore-Resource-Group</td></tr>
+        <tr><th>Subscription</th><td>Petstore subscription</td></tr>
+        <tr><th>App Service plan</th><td>ASP-PetstoreResourceGroup-9881 · Basic B3 · Central India</td></tr>
+        <tr><th>Registry</th><td>petstoreazurecontainerregistry.azurecr.io</td></tr>
+        <tr><th>Evidence</th><td>Running shop and Azure portal screenshots. Secret values are not printed.</td></tr>
+      </tbody>
+    </table>
+    <h2>Contents</h2>
+    <ol class="toc">
+      <li><span class="n">01</span> What this project covers</li>
+      <li><span class="n">02</span> How the pieces fit</li>
+      <li><span class="n">03</span> Storefront</li>
+      <li><span class="n">04</span> Customer orders</li>
+      <li><span class="n">05</span> Administration</li>
+      <li><span class="n">06</span> Azure Database for PostgreSQL</li>
+      <li><span class="n">07</span> Azure Blob Storage</li>
+      <li><span class="n">08</span> Azure Key Vault</li>
+      <li><span class="n">09</span> Azure Container Registry</li>
+      <li><span class="n">10</span> Azure App Service</li>
+      <li><span class="n">11</span> Azure Traffic Manager</li>
+      <li><span class="n">12</span> Run the project</li>
+    </ol>
+    <h2>Deployed applications</h2>
+    <table>
+      <thead><tr><th>Web app</th><th>Image pulled from the registry</th><th>State</th></tr></thead>
+      <tbody>
+        <tr><td>product-service-web-app</td><td>product-service-image · port 8081</td><td>Running, endpoint Online</td></tr>
+        <tr><td>order-service-wep-app</td><td>order-service-image · port 8083</td><td>Running, endpoint Online</td></tr>
+        <tr><td>pet-service-web-app</td><td>pet-service-image · port 8082</td><td>Running, endpoint Online</td></tr>
+        <tr><td>petstoreui-web-app</td><td>petstore-ui-image · port 80</td><td>Running, shop live, endpoint Online</td></tr>
+      </tbody>
+    </table>
   </div>
-  <div class="cover-foot">Product service · Order service · Pet service · React storefront · PostgreSQL · Blob Storage · Key Vault · Container Registry · App Service · Traffic Manager</div>
 </section>
 
 <section>
