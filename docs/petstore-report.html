@@ -45,33 +45,43 @@
   ul { margin: 4px 0 10px; padding-left: 18px; }
   li { margin: 2px 0; }
   .cover {
-    margin: -12mm -13mm 8px;
+    margin: 0 -13mm 8px;
     background: white;
     color: #1c241e;
   }
   .mast {
     background: #143d28;
     color: #f4f7f5;
-    padding: 9mm 13mm 7mm;
+    padding: 6mm 13mm 5mm;
   }
-  .mast-kicker {
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    font-size: 8pt;
-    color: #b7d7c6;
-    margin: 0 0 3px;
+  .mast-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8mm;
+  }
+  .mast-brand {
+    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+    font-size: 13pt;
+    letter-spacing: 0.04em;
+    color: #d7efe3;
+  }
+  .mast-date {
+    font-size: 9pt;
+    color: #d7efe3;
+    white-space: nowrap;
   }
   .mast h1 {
     color: white;
-    font-size: 26pt;
-    line-height: 1;
-    margin: 0;
-    letter-spacing: -0.03em;
+    font-size: 22pt;
+    line-height: 1.05;
+    margin: 2px 0 0;
+    letter-spacing: -0.02em;
   }
   .mast .sub {
-    margin: 6px 0 0;
-    max-width: 165mm;
-    font-size: 10.5pt;
+    margin: 5px 0 0;
+    max-width: 170mm;
+    font-size: 10pt;
     line-height: 1.4;
     color: #e4f2ea;
   }
@@ -197,7 +207,10 @@
 
 <section class="cover">
   <header class="mast">
-    <div class="mast-kicker">PetStore · Azure deployment</div>
+    <div class="mast-row">
+      <div class="mast-brand">PetStore</div>
+      <div class="mast-date">23 October 2026</div>
+    </div>
     <h1>Implementation report</h1>
     <p class="sub">Four applications are deployed on App Service. Each one pulls its image from Azure Container Registry. Traffic Manager reports every endpoint Online, and the storefront is live on the UI hostname.</p>
   </header>
@@ -227,7 +240,6 @@
       <li><span class="n">09</span> Azure Container Registry</li>
       <li><span class="n">10</span> Azure App Service</li>
       <li><span class="n">11</span> Azure Traffic Manager</li>
-      <li><span class="n">12</span> Run the project</li>
     </ol>
     <h2>Deployed applications</h2>
     <table>
@@ -541,52 +553,6 @@
   </figure>
   <p>Priority with a single Online endpoint sends every DNS answer for that profile to that app. A second endpoint, at a worse priority, would be used only after this one stopped passing the probe. These profiles do not have a second endpoint, and every app is in Central India, so the screenshots show a healthy route rather than a failover between regions.</p>
   <p>The shop in Figure 22 and Figure 23 is opened on the App Service hostname. From there the page calls the product and order hostnames in section 10. Traffic Manager’s record of this setup is the health of each endpoint, and DNS lookups of the <span class="mono">trafficmanager.net</span> names. The apps themselves answer on the default domains listed above. Those domains are what the probes check.</p>
-</section>
-
-<section class="section">
-  <h2>12. Run the project</h2>
-  <p>Java 21, Maven, Node 20, and an Azure CLI login are enough on a developer machine. The database and the blob account are already in Azure. From each service directory:</p>
-  <pre class="cmd">java -jar target/product-service-0.1.0.jar --spring.config.additional-location=file:./src/main/resources/application.yml
-
-java -jar target/order-service-0.1.0.jar --spring.config.additional-location=file:./src/main/resources/application.yml
-
-java -jar target/pet-service-0.1.0.jar --spring.config.additional-location=file:./src/main/resources/application.yml</pre>
-  <p>The extra configuration location makes the source YAML win over the copy packed inside the jar. The UI is <span class="mono">npm run dev</span> in <span class="mono">petstore-ui</span>, which serves <span class="mono">http://localhost:3000</span>. It calls product-service on 8081 and order-service on 8083.</p>
-  <h3>Screenshot index</h3>
-  <table>
-    <thead><tr><th>File</th><th>Figure</th><th>What it proves</th></tr></thead>
-    <tbody>
-      <tr><td>mainui1.png</td><td>1</td><td>Public catalog, categories, prices, photos</td></tr>
-      <tr><td>mainui2.png</td><td>2</td><td>Cart drawer and checkout</td></tr>
-      <tr><td>mainui3.png</td><td>3</td><td>Customer order history</td></tr>
-      <tr><td>admin1.png</td><td>4</td><td>Category administration</td></tr>
-      <tr><td>admin2.png</td><td>5</td><td>Pet administration with photos</td></tr>
-      <tr><td>admin3.png</td><td>6</td><td>All orders, with delete</td></tr>
-      <tr><td>postgressql1.png</td><td>7</td><td>Flexible server is Ready</td></tr>
-      <tr><td>postgressql2.png</td><td>8</td><td>Tables and product rows</td></tr>
-      <tr><td>blob1-img.png</td><td>9</td><td>Storage account and pet-container</td></tr>
-      <tr><td>blob2-img.png</td><td>10</td><td>Uploaded pet images</td></tr>
-      <tr><td>key-vault1.png</td><td>11</td><td>Vault in the subscription</td></tr>
-      <tr><td>key-vault2.png</td><td>12</td><td>The four enabled secrets</td></tr>
-      <tr><td>container-registry1.png</td><td>13</td><td>Container registry overview</td></tr>
-      <tr><td>container-registry2.png</td><td>14</td><td>The four image repositories</td></tr>
-      <tr><td>container-registry3.png</td><td>15</td><td>latest and commit tags</td></tr>
-      <tr><td>container-registry4.png</td><td>16</td><td>Image manifest for pet-service-image</td></tr>
-      <tr><td>AppService1.png</td><td>17</td><td>Four apps deployed and Running; each pulls its image from ACR</td></tr>
-      <tr><td>AppService2.png</td><td>18</td><td>Order app deployed, container Healthy, image from the registry</td></tr>
-      <tr><td>AppService3.png</td><td>19</td><td>Pet app deployed, container Healthy, image from the registry</td></tr>
-      <tr><td>AppService4.png</td><td>20</td><td>UI app deployed, container Healthy, image from the registry</td></tr>
-      <tr><td>AppService5.png</td><td>21</td><td>Product app pulling product-service-image from ACR, port 8081</td></tr>
-      <tr><td>AppService6-ui.png</td><td>22</td><td>Deployed shop live on the App Service hostname</td></tr>
-      <tr><td>AppService7-ui.png</td><td>23</td><td>Deployed admin UI live on the same hostname</td></tr>
-      <tr><td>traffic-managers.png</td><td>24</td><td>Four Priority profiles in front of the deployed apps</td></tr>
-      <tr><td>traffic-manager1.png</td><td>25</td><td>Pet endpoint Online: the deployed pet app answered</td></tr>
-      <tr><td>traffic-manager2.png</td><td>26</td><td>Order endpoint Online: the deployed order app answered</td></tr>
-      <tr><td>traffic-manager3.png</td><td>27</td><td>Product endpoint Online: the deployed product app answered</td></tr>
-      <tr><td>traffic-manager4.png</td><td>28</td><td>UI endpoint Online: the deployed storefront answered</td></tr>
-    </tbody>
-  </table>
-  <p class="small">Source screenshots remain in the project folder <span class="mono">screenshots/</span>. This report uses those files. Secret values are not printed.</p>
 </section>
 
 </body>
