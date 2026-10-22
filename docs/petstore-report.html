@@ -34,8 +34,8 @@
   h1 { font-size: 22pt; letter-spacing: -0.02em; }
   h2 {
     font-size: 15pt;
-    margin: 16px 0 6px;
-    padding-top: 8px;
+    margin: 11px 0 4px;
+    padding-top: 6px;
     border-top: 1px solid #e4ddd2;
     page-break-after: avoid;
     break-after: avoid;
@@ -44,48 +44,44 @@
   p { margin: 0 0 8px; }
   ul { margin: 4px 0 10px; padding-left: 18px; }
   li { margin: 2px 0; }
-  .cover {
-    margin: 0 -13mm 8px;
-    background: white;
-    color: #1c241e;
-  }
+  .cover { margin: 0 0 2px; }
   .mast {
-    background: #143d28;
-    color: #f4f7f5;
-    padding: 6mm 13mm 5mm;
+    padding: 0 0 7px;
+    margin: 0 0 2px;
+    border-bottom: 2px solid #143d28;
   }
   .mast-row {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: flex-end;
     gap: 8mm;
   }
   .mast-brand {
-    font-family: "Iowan Old Style", Palatino, Georgia, serif;
-    font-size: 13pt;
-    letter-spacing: 0.04em;
-    color: #d7efe3;
+    font-size: 8.5pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #1f7a4d;
   }
   .mast-date {
     font-size: 9pt;
-    color: #d7efe3;
+    color: #5c675f;
     white-space: nowrap;
   }
   .mast h1 {
-    color: white;
-    font-size: 22pt;
-    line-height: 1.05;
-    margin: 2px 0 0;
-    letter-spacing: -0.02em;
+    color: #143d28;
+    font-size: 26pt;
+    line-height: 1;
+    margin: 1px 0 0;
+    letter-spacing: -0.03em;
   }
   .mast .sub {
-    margin: 5px 0 0;
-    max-width: 170mm;
-    font-size: 10pt;
+    margin: 7px 0 0;
+    font-size: 10.5pt;
     line-height: 1.4;
-    color: #e4f2ea;
+    color: #24352b;
   }
-  .cover-body { padding: 6mm 13mm 2mm; }
+  .cover-body { padding: 0; }
   .cover h2 {
     border-top: 0;
     margin: 2px 0 6px;
@@ -145,20 +141,21 @@
     font-weight: 600;
   }
   .figure {
-    display: inline-block;
+    display: block;
     width: 100%;
-    margin: 8px 0 14px;
+    margin: 6px 0 8px;
     break-inside: avoid;
     page-break-inside: avoid;
   }
   .figure img {
     width: 100%;
-    max-height: 195mm;
+    height: auto;
+    max-height: 108mm;
     object-fit: contain;
     object-position: top center;
     background: #f7f4ee;
     border: 1px solid #e4ddd2;
-    border-radius: 6px;
+    border-radius: 4px;
     display: block;
   }
   .figure figcaption {
