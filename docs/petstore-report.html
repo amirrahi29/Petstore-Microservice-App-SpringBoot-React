@@ -75,7 +75,9 @@
     vertical-align: top;
     padding: 6px 8px;
     border-bottom: 1px solid #e4ddd2;
+    overflow-wrap: break-word;
   }
+  td.num, th.num { white-space: nowrap; width: 1%; overflow-wrap: normal; }
   th {
     background: #f4f1ea;
     color: #145536;
@@ -92,7 +94,10 @@
     font-weight: 600;
   }
   .figure {
+    display: inline-block;
+    width: 100%;
     margin: 8px 0 14px;
+    break-inside: avoid;
     page-break-inside: avoid;
   }
   .figure img {
@@ -132,7 +137,7 @@
     margin: 8px 0 12px;
     font-size: 10pt;
   }
-  code, .mono { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 9pt; hyphens: none; }
+  code, .mono { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 9pt; hyphens: none; overflow-wrap: anywhere; }
   pre.cmd {
     font-family: "SF Mono", Menlo, Consolas, monospace;
     font-size: 8pt;
@@ -153,16 +158,16 @@
   <div>
     <div class="kicker">Project implementation report</div>
     <h1>PetStore</h1>
-    <div class="sub">A three-service shop for pets, with the catalog, orders, images, and secrets running on Azure.</div>
+    <div class="sub">A three-service shop for pets. The catalog, orders, images, and secrets run on Azure, and the four applications are published on App Service.</div>
     <div class="rule"></div>
     <div class="meta">
       <div><strong>Resource group</strong> · Petstore-Resource-Group</div>
       <div><strong>Subscription</strong> · Petstore subscription</div>
-      <div><strong>Date</strong> · 22 October 2026</div>
+      <div><strong>Date</strong> · 23 October 2026</div>
       <div><strong>Evidence</strong> · Screenshots captured from the running UI and the Azure portal</div>
     </div>
   </div>
-  <div class="cover-foot">Product service · Order service · Pet service · React storefront · PostgreSQL · Blob Storage · Key Vault · Container Registry</div>
+  <div class="cover-foot">Product service · Order service · Pet service · React storefront · PostgreSQL · Blob Storage · Key Vault · Container Registry · App Service · Traffic Manager</div>
 </section>
 
 <section>
@@ -180,6 +185,8 @@
       <tr><td>Images</td><td>Azure Blob Storage account <span class="mono">petstore</span>, container <span class="mono">pet-container</span></td><td>Figure 9, Figure 10</td></tr>
       <tr><td>Secrets</td><td>Key Vault <span class="mono">db-credentials-petstore</span>. No database password, connection string, or account key in application YAML</td><td>Figure 11, Figure 12</td></tr>
       <tr><td>Container images</td><td>Azure Container Registry <span class="mono">petstoreazurecontainerregistry</span>. GitHub Actions pushes four images on every push to <span class="mono">main</span></td><td>Figure 13, Figure 14, Figure 15, Figure 16</td></tr>
+      <tr><td>Hosting</td><td>Four Linux web apps deployed on plan <span class="mono">ASP-PetstoreResourceGroup-9881</span>, Basic B3, Central India. Each app pulls its image from the container registry. The live shop is Figure 22</td><td>Figure 17 through Figure 23</td></tr>
+      <tr><td>Routing</td><td>Four Traffic Manager profiles, routing method Priority. Online means that deployed app answered the health probe</td><td>Figure 24 through Figure 28</td></tr>
     </tbody>
   </table>
   <div class="grid">
@@ -202,6 +209,8 @@
       <tr><td>product-service</td><td>Blob container <span class="mono">pet-container</span></td><td>Upload, replace, and delete pet photos</td></tr>
       <tr><td>All three services</td><td>PostgreSQL <span class="mono">petstore-server-name</span></td><td>Database <span class="mono">petstore</span></td></tr>
       <tr><td>GitHub Actions on <span class="mono">main</span></td><td>Container Registry <span class="mono">petstoreazurecontainerregistry</span></td><td>Build and store the four application images</td></tr>
+      <tr><td>App Service</td><td>Those four images</td><td>Public HTTPS sites for the shop and the three APIs</td></tr>
+      <tr><td>Traffic Manager</td><td>The App Service hostnames</td><td>DNS answer for an endpoint whose health probe is passing</td></tr>
     </tbody>
   </table>
   <h3>Application accounts</h3>
@@ -214,6 +223,7 @@
     </tbody>
   </table>
   <div class="note">On startup, Hibernate creates any missing tables (<span class="mono">ddl-auto: update</span>). The order service creates the admin account when that username is missing. It does not reset an existing admin password.</div>
+  <p>Sections 10 and 11 are the hosted form of this same layout. App Service runs the four images. Traffic Manager watches those hostnames and answers DNS with an endpoint that is Online.</p>
 </section>
 
 <section class="section">
@@ -372,11 +382,97 @@
     <img src="figures/container-registry4.jpg" alt="OCI image manifest for the pet-service-image commit tag" />
     <figcaption><strong>Figure 16.</strong> Manifest for <span class="mono">petstoreazurecontainerregistry.azurecr.io/pet-service-image:39c7d5d9d16c5881d0ec3490cc54a14afa1dce4e</span>. The image is a Linux amd64 OCI index.</figcaption>
   </figure>
-  <div class="note">The four workflow files live in <span class="mono">.github/workflows</span>. A push to <span class="mono">main</span> starts all of them. While a build is running, GitHub shows a yellow status on the commit. It turns green when that image is in the registry.</div>
+  <div class="note">The four workflow files live in <span class="mono">.github/workflows</span>. A push to <span class="mono">main</span> starts all of them. While a build is running, GitHub shows a yellow status on the commit. It turns green when that image is in the registry. Section 10 is the next step: each web app pulls its image from this registry and runs it.</div>
 </section>
 
 <section class="section">
-  <h2>10. Run the project</h2>
+  <h2>10. Azure App Service</h2>
+  <p>The four applications are deployed. App Service runs them as Linux web apps in <span class="mono">Petstore-Resource-Group</span>, on one plan, <span class="mono">ASP-PetstoreResourceGroup-9881</span>, in Central India. The plan is Basic, size B3, with one instance. Nothing is copied up as a jar or a zip. The publishing model is Container, so each app pulls its image from <span class="mono">petstoreazurecontainerregistry.azurecr.io</span>, the registry in section 9.</p>
+  <p>Deployed, in this report, means three things that the screenshots show together. The app list says Running. Each overview says runtime status Healthy, with the container image coming from that registry. A browser opened on the public hostname renders the shop. Figure 22 is that last check for the UI: the catalog, with photos and prices, is the deployed <span class="mono">petstore-ui-image</span>, not a local dev server.</p>
+  <table>
+    <thead><tr><th>Web app</th><th>What it serves</th><th class="num">Port</th><th>Default hostname</th></tr></thead>
+    <tbody>
+      <tr><td>product-service-web-app</td><td>Catalog, categories, pet photos</td><td class="num">8081</td><td>product-service-web-app-g7bhexgnaje3brbw.centralindia-01.azurewebsites.net</td></tr>
+      <tr><td>order-service-wep-app</td><td>Register, login, checkout, orders</td><td class="num">8083</td><td>order-service-wep-app-huhhatejg5adc0cr.centralindia-01.azurewebsites.net</td></tr>
+      <tr><td>pet-service-web-app</td><td>Pet API on the same database</td><td class="num">8082</td><td>pet-service-web-app-adgkgbhmfchtfge0.centralindia-01.azurewebsites.net</td></tr>
+      <tr><td>petstoreui-web-app</td><td>Storefront and the admin UI</td><td class="num">80</td><td>petstoreui-web-app-e3cahqc4bad5dthh.centralindia-01.azurewebsites.net</td></tr>
+    </tbody>
+  </table>
+  <p>The order app keeps the name <span class="mono">order-service-wep-app</span> that was used when it was created. That spelling is the resource name and the start of its hostname. Each public URL is HTTPS on the default domain above.</p>
+  <figure class="figure">
+    <img src="figures/appservice1.jpg" alt="Four App Service web apps, all Running, in Central India" />
+    <figcaption><strong>Figure 17.</strong> The deployment list. All four web apps are Running in Central India, on plan <span class="mono">ASP-PetstoreResourceGroup-9881</span>, pricing tier Basic, subscription Petstore subscription. Running is the platform state after App Service has pulled the image and started the container.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/appservice2.jpg" alt="Overview of order-service-wep-app, Running and Healthy" />
+    <figcaption><strong>Figure 18.</strong> <span class="mono">order-service-wep-app</span> is deployed. Publishing model Container, operating system Linux, runtime status Healthy. The container image line is the order image App Service pulled from the registry. The default domain is the public hostname in the table.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/appservice3.jpg" alt="Overview of pet-service-web-app, Running and Healthy" />
+    <figcaption><strong>Figure 19.</strong> <span class="mono">pet-service-web-app</span> is deployed on the same plan and in the same region. Runtime status Healthy. Its container image is pulled from <span class="mono">petstoreazurecontainerregistry</span>, the same way as the order app.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/appservice4.jpg" alt="Overview of petstoreui-web-app, Running and Healthy" />
+    <figcaption><strong>Figure 20.</strong> <span class="mono">petstoreui-web-app</span> is deployed. Runtime status Healthy, Linux, publishing model Container. This is the app whose hostname serves Figure 22 and Figure 23. App Service pulled <span class="mono">petstore-ui-image</span> from the registry to run it.</figcaption>
+  </figure>
+  <p>Deployment Center is where the pull is recorded. On <span class="mono">product-service-web-app</span> the main container is named <span class="mono">product-service</span>. Source is Azure Container Registry, image <span class="mono">product-service-image</span>, tag <span class="mono">5a99f3e102c5612cccff9ac7330e5eb319ffe8db</span>, port 8081. Continuous deployment for that main container is turned on, so App Service pulls this image from the registry when the app runs. The order, pet, and UI apps are wired the same way: one main container, image from this registry, port 8083, 8082, or 80.</p>
+  <figure class="figure">
+    <img src="figures/appservice5.jpg" alt="Deployment Center for product-service-web-app showing the registry image and port 8081" />
+    <figcaption><strong>Figure 21.</strong> The ACR pull for the deployed product app. Source Azure Container Registry, image <span class="mono">product-service-image</span>, tag <span class="mono">5a99f3e102c5612cccff9ac7330e5eb319ffe8db</span>, port 8081. Continuous deployment for the main container is on.</figcaption>
+  </figure>
+  <p>Figure 22 is the deployed shop, opened in a browser. The address bar is the App Service hostname, so this page is <span class="mono">petstoreui-web-app</span> after it pulled <span class="mono">petstore-ui-image</span>. The catalog matches section 3: no login wall, category chips, prices, photos, Details, and Add to cart, with 20 pets. Figure 23 is the same deployment at <span class="mono">/admin/products</span>. The signed-in administrator is <span class="mono">admin</span>, and the grid has photo, category, price, edit, and delete. Together these two figures show that the container App Service pulled is the application, and that it is serving traffic.</p>
+  <figure class="figure">
+    <img src="figures/appservice6-ui.jpg" alt="Hosted PetStore catalog on the App Service hostname" />
+    <figcaption><strong>Figure 22.</strong> The deployed UI, live. <span class="mono">https://petstoreui-web-app-e3cahqc4bad5dthh.centralindia-01.azurewebsites.net</span> serves the catalog from the image App Service pulled from ACR. Twenty pets, filters for All, Cat, Dog, and Parrot.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/appservice7-ui.jpg" alt="Hosted admin pets page on the App Service hostname" />
+    <figcaption><strong>Figure 23.</strong> The same deployed app, path <span class="mono">/admin/products</span>, signed in as <span class="mono">admin</span>. Administration is running on App Service, on the image pulled from the registry.</figcaption>
+  </figure>
+  <p>The UI image is built with the product and order hostnames in the table, so the browser on this shop calls those App Service URLs. The three Java apps still read <span class="mono">db-credentials-petstore</span> before they open PostgreSQL. On App Service that read uses the app’s managed identity. A Healthy runtime status means the container finished that startup and is serving its port.</p>
+  <div class="note">The App Service Health Check setting on these overview blades is Not Configured. That setting is separate from runtime status. Endpoint health for DNS routing is the Traffic Manager probe in the next section.</div>
+</section>
+
+<section class="section">
+  <h2>11. Azure Traffic Manager</h2>
+  <p>Traffic Manager answers DNS for a profile name such as <span class="mono">ui-traffic-manager.trafficmanager.net</span>. The client then connects to the address it was given. The profile chooses an endpoint whose health probe is passing. These four profiles use Priority routing. Each profile holds one External endpoint, aimed at one of the deployed web apps in section 10.</p>
+  <p>Monitor status Online means that deployed app answered. The probe calls the App Service hostname over HTTPS, and Online is the result when the container App Service pulled from ACR is up. It is the same fact as Figure 22, read from the routing side: the UI endpoint is Online because <span class="mono">petstoreui-web-app</span> is deployed and serving. The product, order, and pet endpoints are Online for the same reason on their own apps.</p>
+  <table>
+    <thead><tr><th>Profile</th><th>DNS name</th><th>Endpoint</th><th>Web app</th></tr></thead>
+    <tbody>
+      <tr><td>ui-traffic-manager</td><td>ui-traffic-manager.trafficmanager.net</td><td>ui-service</td><td>petstoreui-web-app</td></tr>
+      <tr><td>product-traffic-manager</td><td>product-traffic-manager.trafficmanager.net</td><td>product-service</td><td>product-service-web-app</td></tr>
+      <tr><td>petstore-traffic-manager</td><td>petstore-traffic-manager.trafficmanager.net</td><td>order-service</td><td>order-service-wep-app</td></tr>
+      <tr><td>pet-traffic-manager</td><td>pet-traffic-manager.trafficmanager.net</td><td>pet-service</td><td>pet-service-web-app</td></tr>
+    </tbody>
+  </table>
+  <p>All four profiles sit in <span class="mono">Petstore-Resource-Group</span>, on the Petstore subscription, with status Enabled and routing method Priority. The endpoint type is External. Each one targets the default hostname of the deployed app, the hostname App Service published after the ACR pull. Each endpoint is Enabled, and Monitor status is Online. The probe is HTTPS on port 443, path <span class="mono">/</span>. A success response from that deployed app is what the portal marks Online. A failed probe stops that endpoint from being offered.</p>
+  <figure class="figure">
+    <img src="figures/traffic-managers.jpg" alt="Four Traffic Manager profiles, all Enabled, routing method Priority" />
+    <figcaption><strong>Figure 24.</strong> Four profiles in front of the four deployed apps. Status Enabled, routing method Priority, resource group Petstore-Resource-Group. Each profile’s endpoint is one App Service hostname.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/traffic-manager1.jpg" alt="pet-traffic-manager endpoint pet-service Enabled and Online" />
+    <figcaption><strong>Figure 25.</strong> <span class="mono">pet-traffic-manager</span>. Endpoint <span class="mono">pet-service</span> is Enabled and Online. Online means the deployed <span class="mono">pet-service-web-app</span>, the container pulled from ACR, answered the health probe.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/traffic-manager2.jpg" alt="petstore-traffic-manager endpoint order-service Enabled and Online" />
+    <figcaption><strong>Figure 26.</strong> <span class="mono">petstore-traffic-manager</span>. Endpoint <span class="mono">order-service</span> is Enabled and Online. The probe reached the deployed <span class="mono">order-service-wep-app</span>.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/traffic-manager3.jpg" alt="product-traffic-manager endpoint product-service Enabled and Online" />
+    <figcaption><strong>Figure 27.</strong> <span class="mono">product-traffic-manager</span>. Endpoint <span class="mono">product-service</span> is Enabled and Online. The probe reached the deployed <span class="mono">product-service-web-app</span>, the app whose ACR image and tag are in Figure 21.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/traffic-manager4.jpg" alt="ui-traffic-manager endpoint ui-service Enabled and Online" />
+    <figcaption><strong>Figure 28.</strong> <span class="mono">ui-traffic-manager</span>. Endpoint <span class="mono">ui-service</span> is Enabled and Online. Online here is the deployed storefront: the same <span class="mono">petstoreui-web-app</span> that serves Figure 22.</figcaption>
+  </figure>
+  <p>Priority with a single Online endpoint sends every DNS answer for that profile to that app. A second endpoint, at a worse priority, would be used only after this one stopped passing the probe. These profiles do not have a second endpoint, and every app is in Central India, so the screenshots show a healthy route rather than a failover between regions.</p>
+  <p>The shop in Figure 22 and Figure 23 is opened on the App Service hostname. From there the page calls the product and order hostnames in section 10. Traffic Manager’s record of this setup is the health of each endpoint, and DNS lookups of the <span class="mono">trafficmanager.net</span> names. The apps themselves answer on the default domains listed above. Those domains are what the probes check.</p>
+</section>
+
+<section class="section">
+  <h2>12. Run the project</h2>
   <p>Java 21, Maven, Node 20, and an Azure CLI login are enough on a developer machine. The database and the blob account are already in Azure. From each service directory:</p>
   <pre class="cmd">java -jar target/product-service-0.1.0.jar --spring.config.additional-location=file:./src/main/resources/application.yml
 
@@ -404,6 +500,18 @@ java -jar target/pet-service-0.1.0.jar --spring.config.additional-location=file:
       <tr><td>container-registry2.png</td><td>14</td><td>The four image repositories</td></tr>
       <tr><td>container-registry3.png</td><td>15</td><td>latest and commit tags</td></tr>
       <tr><td>container-registry4.png</td><td>16</td><td>Image manifest for pet-service-image</td></tr>
+      <tr><td>AppService1.png</td><td>17</td><td>Four apps deployed and Running; each pulls its image from ACR</td></tr>
+      <tr><td>AppService2.png</td><td>18</td><td>Order app deployed, container Healthy, image from the registry</td></tr>
+      <tr><td>AppService3.png</td><td>19</td><td>Pet app deployed, container Healthy, image from the registry</td></tr>
+      <tr><td>AppService4.png</td><td>20</td><td>UI app deployed, container Healthy, image from the registry</td></tr>
+      <tr><td>AppService5.png</td><td>21</td><td>Product app pulling product-service-image from ACR, port 8081</td></tr>
+      <tr><td>AppService6-ui.png</td><td>22</td><td>Deployed shop live on the App Service hostname</td></tr>
+      <tr><td>AppService7-ui.png</td><td>23</td><td>Deployed admin UI live on the same hostname</td></tr>
+      <tr><td>traffic-managers.png</td><td>24</td><td>Four Priority profiles in front of the deployed apps</td></tr>
+      <tr><td>traffic-manager1.png</td><td>25</td><td>Pet endpoint Online: the deployed pet app answered</td></tr>
+      <tr><td>traffic-manager2.png</td><td>26</td><td>Order endpoint Online: the deployed order app answered</td></tr>
+      <tr><td>traffic-manager3.png</td><td>27</td><td>Product endpoint Online: the deployed product app answered</td></tr>
+      <tr><td>traffic-manager4.png</td><td>28</td><td>UI endpoint Online: the deployed storefront answered</td></tr>
     </tbody>
   </table>
   <p class="small">Source screenshots remain in the project folder <span class="mono">screenshots/</span>. This report uses those files. Secret values are not printed.</p>
