@@ -12,7 +12,7 @@ A small shop for trying Azure later. Pets are the products: each one has a price
 
 Swagger:
 
-- http://localhost:8081/swagger-ui.html
+- http://localhost:8081/swagger-ui.html 
 - http://localhost:8083/swagger-ui.html
 
 ## Accounts
