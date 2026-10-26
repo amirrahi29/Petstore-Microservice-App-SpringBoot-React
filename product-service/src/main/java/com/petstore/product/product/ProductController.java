@@ -19,10 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
-import java.util.concurrent.ThreadLocalRandom;
 
 @RestController
 @RequestMapping("/api/products")
@@ -30,7 +28,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public class ProductController {
 
     private static final Logger log = LoggerFactory.getLogger(ProductController.class);
-    private static final double FAILURE_RATE = 0.4;
 
     private final ProductService products;
 
@@ -44,13 +41,6 @@ public class ProductController {
             @RequestParam(defaultValue = "8") int size) {
         int bounded = Math.min(size, 50);
         log.info("product list request at {} page={} size={}", Instant.now(), page, bounded);
-        if (ThreadLocalRandom.current().nextDouble() < FAILURE_RATE) {
-            log.error("product list failed at {} page={} size={} status=503 reason=injected random failure",
-                    Instant.now(), page, bounded);
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE,
-                    "Product catalog is temporarily unavailable");
-        }
         try {
             PageResponse<ProductResponse> body = products.list(
                     PageRequest.of(page, bounded, Sort.by("id").descending()));
