@@ -1,5 +1,6 @@
 package com.petstore.product.config;
 
+import com.azure.core.exception.ResourceNotFoundException;
 import com.azure.data.appconfiguration.ConfigurationClientBuilder;
 import com.azure.data.appconfiguration.models.ConfigurationSetting;
 import com.azure.identity.DefaultAzureCredentialBuilder;
@@ -58,6 +59,13 @@ public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcesso
                     || environment.getProperty("app.jwt.secret").isBlank()) {
                 secrets.put("app.jwt.secret", jwtSecret(environment));
             }
+            if (environment.getProperty("app.cosmos.key") == null
+                    || environment.getProperty("app.cosmos.key").isBlank()) {
+                String cosmosKey = optional(client, "cosmos-key");
+                if (cosmosKey != null) {
+                    secrets.put("app.cosmos.key", cosmosKey);
+                }
+            }
             environment.getPropertySources().addFirst(new MapPropertySource(SOURCE, secrets));
         } catch (IllegalStateException ex) {
             throw ex;
@@ -91,5 +99,17 @@ public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcesso
             throw new IllegalStateException("Azure Key Vault secret '" + name + "' is empty");
         }
         return value;
+    }
+
+    private static String optional(SecretClient client, String name) {
+        try {
+            String value = client.getSecret(name).getValue();
+            if (value == null || value.isBlank()) {
+                return null;
+            }
+            return value;
+        } catch (ResourceNotFoundException ex) {
+            return null;
+        }
     }
 }

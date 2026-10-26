@@ -18,6 +18,7 @@ public class ProductService {
     private final ProductRepository products;
     private final CategoryService categories;
     private final StorageService storageService;
+    private final ProductCosmosCopy cosmosCopies;
 
     public PageResponse<ProductResponse> list(Pageable pageable) {
         return PageResponse.of(products.findAll(pageable).map(this::present));
@@ -31,7 +32,9 @@ public class ProductService {
     public ProductResponse create(ProductRequest request) {
         Product product = new Product();
         apply(product, request);
-        return present(products.save(product));
+        Product saved = products.save(product);
+        cosmosCopies.save(saved);
+        return present(saved);
     }
 
     @Transactional
