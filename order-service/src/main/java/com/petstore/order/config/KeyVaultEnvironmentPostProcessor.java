@@ -1,6 +1,8 @@
 package com.petstore.order.config;
 
 import com.azure.core.exception.ResourceNotFoundException;
+import com.azure.data.appconfiguration.ConfigurationClientBuilder;
+import com.azure.data.appconfiguration.models.ConfigurationSetting;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
@@ -8,6 +10,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
@@ -15,13 +18,18 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcessor,
-        ApplicationContextInitializer<ConfigurableApplicationContext> {
+        ApplicationContextInitializer<ConfigurableApplicationContext>, Ordered {
 
     static final String SOURCE = "azureKeyVault";
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         apply(environment);
+    }
+
+    @Override
+    public int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE;
     }
 
     @Override
@@ -45,6 +53,10 @@ public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcesso
             Map<String, Object> secrets = new LinkedHashMap<>();
             secrets.put("spring.datasource.username", required(client, "username"));
             secrets.put("spring.datasource.password", required(client, "password"));
+            if (environment.getProperty("app.jwt.secret") == null
+                    || environment.getProperty("app.jwt.secret").isBlank()) {
+                secrets.put("app.jwt.secret", jwtSecret(environment));
+            }
             if (environment.getProperty("app.cosmos.key") == null
                     || environment.getProperty("app.cosmos.key").isBlank()) {
                 String cosmosKey = optional(client, "cosmos-key");
@@ -61,6 +73,22 @@ public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcesso
                             + ". Sign in with Azure CLI (az login) using an account that can get secrets.",
                     ex);
         }
+    }
+
+    private static String jwtSecret(ConfigurableEnvironment environment) {
+        String endpoint = environment.getProperty(
+                "APP_CONFIGURATION_ENDPOINT",
+                "https://petstore-appconfig.azconfig.io");
+        ConfigurationSetting setting = new ConfigurationClientBuilder()
+                .endpoint(endpoint)
+                .credential(new DefaultAzureCredentialBuilder().build())
+                .buildClient()
+                .getConfigurationSetting("app.jwt.secret", "order-service");
+        if (setting == null || setting.getValue() == null || setting.getValue().isBlank()) {
+            throw new IllegalStateException(
+                    "App Configuration key app.jwt.secret is missing for label order-service");
+        }
+        return setting.getValue();
     }
 
     private static String required(SecretClient client, String name) {

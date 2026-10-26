@@ -39,6 +39,20 @@ public class ProductCosmosCopy {
         container().upsertItem(document, new PartitionKey(document.getId()), new CosmosItemRequestOptions());
     }
 
+    public void delete(Long id) {
+        if (id == null) {
+            return;
+        }
+        String documentId = String.valueOf(id);
+        try {
+            container().deleteItem(documentId, new PartitionKey(documentId), new CosmosItemRequestOptions());
+        } catch (com.azure.cosmos.CosmosException ex) {
+            if (ex.getStatusCode() != 404) {
+                throw ex;
+            }
+        }
+    }
+
     @PreDestroy
     public void close() {
         if (client != null) {

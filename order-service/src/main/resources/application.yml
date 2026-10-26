@@ -1,18 +1,38 @@
+server:
+  port: 8083
+
 spring:
   application:
     name: order-service
   config:
     import: azureAppConfiguration
+  datasource:
+    url: jdbc:postgresql://petstore-server-name.postgres.database.azure.com/petstore
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
   cloud:
     azure:
       appconfiguration:
         stores:
           - endpoint: ${APP_CONFIGURATION_ENDPOINT:https://petstore-appconfig.azconfig.io}
             selects:
-              - key-filter: "*"
+              - key-filter: app
+                label-filter: order-service
+              - key-filter: spring
+                label-filter: order-service
+              - key-filter: server
                 label-filter: order-service
 
 app:
+  keyvault:
+    endpoint: https://db-credentials-petstore.vault.azure.net/
+  jwt:
+    expiration-ms: 86400000
+  product-service-url: https://product-service-web-app-g7bhexgnaje3brbw.centralindia-01.azurewebsites.net
+  cors:
+    allowed-origins: http://localhost:3000,https://petstoreui-web-app-e3cahqc4bad5dthh.centralindia-01.azurewebsites.net
   cosmos:
     endpoint: ${COSMOS_ENDPOINT:https://petstore-cosmos.documents.azure.com:443/}
     key: ${COSMOS_KEY:}

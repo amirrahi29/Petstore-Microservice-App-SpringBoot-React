@@ -41,7 +41,9 @@ public class ProductService {
     public ProductResponse update(Long id, ProductRequest request) {
         Product product = find(id);
         apply(product, request);
-        return present(products.save(product));
+        Product saved = products.save(product);
+        cosmosCopies.save(saved);
+        return present(saved);
     }
 
     @Transactional
@@ -49,6 +51,7 @@ public class ProductService {
         Product product = find(id);
         storageService.delete(product.getImageUrl());
         products.delete(product);
+        cosmosCopies.delete(id);
     }
 
     @Transactional
