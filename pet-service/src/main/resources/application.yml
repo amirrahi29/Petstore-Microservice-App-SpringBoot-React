@@ -1,18 +1,13 @@
-server:
-  port: 8082
-
 spring:
-  datasource:
-    url: jdbc:postgresql://petstore-server-name.postgres.database.azure.com/petstore
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: update
-
-app:
-  keyvault:
-    endpoint: https://db-credentials-petstore.vault.azure.net/
-  jwt:
-    secret: petstore-demo-jwt-secret-key-change-me
-  cors:
-    allowed-origins: http://localhost:3000,https://petstoreui-web-app-e3cahqc4bad5dthh.centralindia-01.azurewebsites.net
+  application:
+    name: pet-service
+  config:
+    import: azureAppConfiguration
+  cloud:
+    azure:
+      appconfiguration:
+        stores:
+          - endpoint: ${APP_CONFIGURATION_ENDPOINT:https://petstore-appconfig.azconfig.io}
+            selects:
+              - key-filter: "*"
+                label-filter: pet-service
