@@ -32,6 +32,13 @@ jobs:
       - name: Login to ACR
         run: az acr login --name petstoreazurecontainerregistry
 
+      - name: Read UI config from App Configuration
+        id: appconfig
+        run: |
+          echo "product=$(az appconfig kv show --name petstore-appconfig --key VITE_PRODUCT_API --label petstore-ui --auth-mode login --query value -o tsv)" >> "$GITHUB_OUTPUT"
+          echo "pet=$(az appconfig kv show --name petstore-appconfig --key VITE_PET_API --label petstore-ui --auth-mode login --query value -o tsv)" >> "$GITHUB_OUTPUT"
+          echo "order=$(az appconfig kv show --name petstore-appconfig --key VITE_ORDER_API --label petstore-ui --auth-mode login --query value -o tsv)" >> "$GITHUB_OUTPUT"
+
       - uses: docker/setup-buildx-action@v3
 
       - name: Build and push
@@ -40,9 +47,9 @@ jobs:
           context: petstore-ui
           push: true
           build-args: |
-            VITE_PRODUCT_API=https://product-service-web-app-g7bhexgnaje3brbw.centralindia-01.azurewebsites.net
-            VITE_PET_API=https://pet-service-web-app-adgkgbhmfchtfge0.centralindia-01.azurewebsites.net
-            VITE_ORDER_API=https://order-service-wep-app-huhhatejg5adc0cr.centralindia-01.azurewebsites.net
+            VITE_PRODUCT_API=${{ steps.appconfig.outputs.product }}
+            VITE_PET_API=${{ steps.appconfig.outputs.pet }}
+            VITE_ORDER_API=${{ steps.appconfig.outputs.order }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
