@@ -608,5 +608,44 @@
   </figure>
 </section>
 
+<section class="section">
+  <h2>16. Azure Cosmos DB</h2>
+  <p>The shop cart and a copy of the catalog sit in Azure Cosmos DB for NoSQL, account <span class="mono">petstore-cosmos</span>, database <span class="mono">petstore</span>. PostgreSQL remains the store for products, categories, orders, and users. The order service writes the signed-in shopper’s cart to container <span class="mono">cart</span>. One document per user uses the user id as both <span class="mono">id</span> and <span class="mono">userId</span>, and the lines live in <span class="mono">items</span>. The product service copies each saved pet into container <span class="mono">products</span>. Data Explorer shows both containers under the same database.</p>
+  <figure class="figure">
+    <img src="figures/cosmos-db-cart-items.png" alt="Cosmos Data Explorer cart container, document 4 with an empty items array" />
+    <figcaption><strong>Figure 36.</strong> Data Explorer on <span class="mono">petstore-cosmos</span>. Database <span class="mono">petstore</span>, container <span class="mono">cart</span>, document id 4. <span class="mono">userId</span> is 4 and <span class="mono">items</span> is an empty array.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/cosmos-cart-store.png" alt="Cosmos cart document for user 4 containing Dog1 with quantity 2" />
+    <figcaption><strong>Figure 37.</strong> The same cart document after a shop add. <span class="mono">items</span> holds Dog1, price 390, category Dog, quantity 2, with the photo URL in Blob Storage. Container <span class="mono">products</span> is listed beside <span class="mono">cart</span>.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/cosmos-db-1.png" alt="Cosmos cart document for user 4 containing Dog1 and Parrot 5" />
+    <figcaption><strong>Figure 38.</strong> Cart document 4 with two lines: Dog1, quantity 2, and Parrot 5, price 433, quantity 1. The query is <span class="mono">SELECT * FROM c</span> on <span class="mono">cart</span>.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/cosmos-db-2.png" alt="Deployed PetStore cart drawer with Dog1 and Parrot 5, and cart requests returning 200" />
+    <figcaption><strong>Figure 39.</strong> The deployed shop at <span class="mono">petstoreui-web-app-e3cahqc4bad5dthh.centralindia-01.azurewebsites.net</span>. The cart drawer lists Dog1 at quantity 2 and Parrot 5 at quantity 1. The total is $1,213.00. The network panel shows the cart calls returning 200. The catalog also includes CosmosProbePet, the pet written through the product copy.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>17. PostgreSQL products, later query</h2>
+  <p>Section 6 showed the flexible server and the <span class="mono">petstore</span> database. A later query in pgAdmin reads the same table after more pets were saved. The public schema lists <span class="mono">categories</span>, <span class="mono">order_items</span>, <span class="mono">orders</span>, <span class="mono">pets</span>, <span class="mono">products</span>, <span class="mono">roles</span>, and <span class="mono">users</span>.</p>
+  <figure class="figure">
+    <img src="figures/azure-postgressql.png" alt="pgAdmin query of public.products ordered by id, twenty rows, with the petstore tables listed" />
+    <figcaption><strong>Figure 40.</strong> pgAdmin, database <span class="mono">petstore</span> on <span class="mono">pet-postgres</span>. <span class="mono">SELECT * FROM public.products ORDER BY id ASC</span> returns 20 rows, ids 4 through 13 on the first page, categories Dog and Cat.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>18. App Service scale-out</h2>
+  <p>Plan <span class="mono">ASP-PetstoreResourceGroup-9881</span> can add instances from the Scale out blade. The selected scale-out method is Rules Based, so the instance count follows user-defined rules on a schedule or a metric. Manual would hold a constant count. Automatic scale-out is not available on this plan.</p>
+  <figure class="figure">
+    <img src="figures/appstorage-scaling.png" alt="App Service plan scale out blade with Rules Based selected" />
+    <figcaption><strong>Figure 41.</strong> Scale out for <span class="mono">ASP-PetstoreResourceGroup-9881</span>. Rules Based is selected. The note on the blade says rule-based scaling is ignored if Automatic scaling is enabled.</figcaption>
+  </figure>
+</section>
+
 </body>
 </html>
