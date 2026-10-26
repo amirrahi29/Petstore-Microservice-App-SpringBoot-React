@@ -2,8 +2,6 @@ package com.petstore.product.product;
 
 import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.CosmosContainer;
-import com.azure.cosmos.CosmosDatabase;
-import com.azure.cosmos.models.CosmosContainerProperties;
 import com.azure.cosmos.models.CosmosItemRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
 import jakarta.annotation.PreDestroy;
@@ -77,10 +75,9 @@ public class ProductCosmosCopy {
                         .endpoint(endpoint)
                         .key(key)
                         .gatewayMode()
+                        .idleHttpConnectionTimeout(java.time.Duration.ofSeconds(10))
                         .buildClient();
-                CosmosDatabase database = client.getDatabase(databaseName);
-                database.createContainerIfNotExists(new CosmosContainerProperties(containerName, "/id"));
-                container = database.getContainer(containerName);
+                container = client.getDatabase(databaseName).getContainer(containerName);
             }
             return container;
         }
