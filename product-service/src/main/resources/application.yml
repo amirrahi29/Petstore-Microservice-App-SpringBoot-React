@@ -9,9 +9,9 @@ spring:
         stores:
           - endpoint: ${APP_CONFIGURATION_ENDPOINT:https://petstore-appconfig.azconfig.io}
             selects:
-              - key-filter: "spring."
+              - key-filter: ""
                 label-filter: product-service
-              - key-filter: "app."
-                label-filter: product-service
-              - key-filter: "server."
-                label-filter: product-service
+
+app:
+  keyvault:
+    endpoint: https://db-credentials-petstore.vault.azure.net/
