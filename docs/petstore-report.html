@@ -552,5 +552,61 @@
   <p>The shop in Figure 22 and Figure 23 is opened on the App Service hostname. From there the page calls the product and order hostnames in section 10. Traffic Manager’s record of this setup is the health of each endpoint, and DNS lookups of the <span class="mono">trafficmanager.net</span> names. The apps themselves answer on the default domains listed above. Those domains are what the probes check.</p>
 </section>
 
+<section class="section">
+  <h2>12. Azure App Configuration</h2>
+  <p>The storefront hostnames are kept in Azure App Configuration, store <span class="mono">petstore-appconfig</span>, in the same resource group. Configuration explorer, filtered to label <span class="mono">petstore-ui</span>, shows three keys. The portal hides the values. The keys are the three API addresses the UI build reads.</p>
+  <table>
+    <thead><tr><th>Key</th><th>Label</th><th>Last modified</th></tr></thead>
+    <tbody>
+      <tr><td>VITE_ORDER_API</td><td>petstore-ui</td><td>26/10/2026, 22:07:14</td></tr>
+      <tr><td>VITE_PET_API</td><td>petstore-ui</td><td>26/10/2026, 22:07:14</td></tr>
+      <tr><td>VITE_PRODUCT_API</td><td>petstore-ui</td><td>26/10/2026, 22:07:13</td></tr>
+    </tbody>
+  </table>
+  <figure class="figure">
+    <img src="figures/appservice-applicationConfiguration.png" alt="petstore-appconfig Configuration explorer with the petstore-ui label and three VITE keys" />
+    <figcaption><strong>Figure 29.</strong> <span class="mono">petstore-appconfig</span>, Configuration explorer. Label equals <span class="mono">petstore-ui</span>. Three keys are loaded: <span class="mono">VITE_ORDER_API</span>, <span class="mono">VITE_PET_API</span>, and <span class="mono">VITE_PRODUCT_API</span>. Each value is hidden in the portal.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>13. Deployment slots</h2>
+  <p><span class="mono">petstoreui-web-app</span> has a deployment slot beside production. The Deployment slots blade lists the production slot and <span class="mono">petstoreui-web-app-staging</span>. Both sit on plan <span class="mono">ASP-PetstoreResourceGroup-9881</span>. In this screenshot production is Stopped and holds 100 percent of the traffic. The staging slot is Running and holds 0 percent. Swap is available on the same blade. The app list on the left still shows the four web apps from section 10.</p>
+  <figure class="figure">
+    <img src="figures/appservice-multi-env-slots.png" alt="petstoreui-web-app deployment slots, production Stopped at 100 percent and staging Running at 0 percent" />
+    <figcaption><strong>Figure 30.</strong> Deployment slots on <span class="mono">petstoreui-web-app</span>. Production is Stopped with traffic 100. <span class="mono">petstoreui-web-app-staging</span> is Running with traffic 0.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>14. Pet Store monitoring</h2>
+  <p>The deployed shop was opened on its App Service hostname with the browser network panel recording the page load. The document, the script, and the stylesheet return HTTP 200. The catalog call <span class="mono">products?page=0&amp;size=50</span> is still pending, and the page stays on Loading with empty cards.</p>
+  <figure class="figure">
+    <img src="figures/petstore-app-insights-monitoring2.png" alt="PetStore page on the App Service hostname with the products request still pending" />
+    <figcaption><strong>Figure 31.</strong> <span class="mono">petstoreui-web-app-e3cahqc4bad5dthh.centralindia-01.azurewebsites.net</span>. Login, the index script, and the stylesheet are 200. The products request is pending, so the Pets grid is still Loading.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>15. Application Insights</h2>
+  <p>Live metrics for <span class="mono">petstore-app-insights</span> show the product service as it runs on App Service. The blade is the last 60 seconds. Incoming charts are request rate, request duration, and request failure rate. Outgoing charts are dependency call rate, dependency duration, and dependency failure rate. Overall health shows committed memory, CPU total, and exception rate. Sample telemetry on the right is the log line behind a spike. Servers lists each process with requests, failed requests, dependencies, CPU, and committed memory.</p>
+  <figure class="figure">
+    <img src="figures/petstore-app-insights.png" alt="Application Insights live metrics with a Key Vault endpoint exception and CPU and memory charts" />
+    <figcaption><strong>Figure 32.</strong> Live metrics, two servers online, at 18:01. Sample telemetry is the exception “Set app.keyvault.endpoint to the Azure Key Vault URL”. Request charts are at zero. Committed memory and CPU are plotted, and the servers table shows about 74 percent and 81 percent CPU with 144 MB and 126 MB committed.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/petstore-app-insights-monitoring.png" alt="Application Insights live metrics with Tomcat startup traces and managed identity" />
+    <figcaption><strong>Figure 33.</strong> The same Live metrics blade, three servers online, at 18:17. Traces record Spring context initialization, Tomcat on port 8081, <span class="mono">ProductServiceApplication</span> started, and a managed-identity token. CPU and committed memory stay on the overall-health row. Dependency failure rate spikes once in the minute.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/petstore-app-insights-monitoring1.png" alt="Application Insights live metrics showing product requests succeeding and failing" />
+    <figcaption><strong>Figure 34.</strong> Live metrics at 18:50, two servers online. Traces for <span class="mono">GET /api/products</span> include status 200 and status 503 with the reason “injected random failure”. One request line is HTTP 401. Request failure rate spikes with those 503s. Committed memory holds near 250 MB and CPU stays low.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/petstore-app-insights-monitoring3.png" alt="Application Insights live metrics with a request failure spike and a 503 catalog trace" />
+    <figcaption><strong>Figure 35.</strong> Live metrics at 18:51, two servers online. Request failure rate spikes at the right edge. Sample telemetry shows <span class="mono">GET /api/products</span> failing with status 503, “injected random failure”, and one request recorded as 401 in 243 ms. Committed memory and CPU remain on the overall-health charts.</figcaption>
+  </figure>
+</section>
+
 </body>
 </html>
