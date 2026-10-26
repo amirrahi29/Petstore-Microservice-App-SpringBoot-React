@@ -75,7 +75,6 @@ public class ProductCosmosCopy {
                         .endpoint(endpoint)
                         .key(key)
                         .gatewayMode()
-                        .idleHttpConnectionTimeout(java.time.Duration.ofSeconds(10))
                         .buildClient();
                 container = client.getDatabase(databaseName).getContainer(containerName);
             }
