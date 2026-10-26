@@ -1,5 +1,7 @@
 package com.petstore.product.config;
 
+import com.azure.data.appconfiguration.ConfigurationClientBuilder;
+import com.azure.data.appconfiguration.models.ConfigurationSetting;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
@@ -52,6 +54,10 @@ public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcesso
             secrets.put("spring.datasource.password", required(client, "password"));
             secrets.put("app.storage.connection-string", required(client, "connection-string"));
             secrets.put("app.storage.account-key", required(client, "account-key"));
+            if (environment.getProperty("app.jwt.secret") == null
+                    || environment.getProperty("app.jwt.secret").isBlank()) {
+                secrets.put("app.jwt.secret", jwtSecret(environment));
+            }
             environment.getPropertySources().addFirst(new MapPropertySource(SOURCE, secrets));
         } catch (IllegalStateException ex) {
             throw ex;
@@ -61,6 +67,22 @@ public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcesso
                             + ". Sign in with Azure CLI (az login) using an account that can get secrets.",
                     ex);
         }
+    }
+
+    private static String jwtSecret(ConfigurableEnvironment environment) {
+        String endpoint = environment.getProperty(
+                "APP_CONFIGURATION_ENDPOINT",
+                "https://petstore-appconfig.azconfig.io");
+        ConfigurationSetting setting = new ConfigurationClientBuilder()
+                .endpoint(endpoint)
+                .credential(new DefaultAzureCredentialBuilder().build())
+                .buildClient()
+                .getConfigurationSetting("app.jwt.secret", "product-service");
+        if (setting == null || setting.getValue() == null || setting.getValue().isBlank()) {
+            throw new IllegalStateException(
+                    "App Configuration key app.jwt.secret is missing for label product-service");
+        }
+        return setting.getValue();
     }
 
     private static String required(SecretClient client, String name) {
