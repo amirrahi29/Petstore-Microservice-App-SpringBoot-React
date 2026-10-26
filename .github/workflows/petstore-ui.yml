@@ -35,9 +35,16 @@ jobs:
       - name: Read UI config from App Configuration
         id: appconfig
         run: |
-          echo "product=$(az appconfig kv show --name petstore-appconfig --key VITE_PRODUCT_API --label petstore-ui --auth-mode login --query value -o tsv)" >> "$GITHUB_OUTPUT"
-          echo "pet=$(az appconfig kv show --name petstore-appconfig --key VITE_PET_API --label petstore-ui --auth-mode login --query value -o tsv)" >> "$GITHUB_OUTPUT"
-          echo "order=$(az appconfig kv show --name petstore-appconfig --key VITE_ORDER_API --label petstore-ui --auth-mode login --query value -o tsv)" >> "$GITHUB_OUTPUT"
+          endpoint="https://petstore-appconfig.azconfig.io"
+          product=$(az appconfig kv show --endpoint "$endpoint" --key VITE_PRODUCT_API --label petstore-ui --auth-mode login --query value -o tsv) || exit 1
+          pet=$(az appconfig kv show --endpoint "$endpoint" --key VITE_PET_API --label petstore-ui --auth-mode login --query value -o tsv) || exit 1
+          order=$(az appconfig kv show --endpoint "$endpoint" --key VITE_ORDER_API --label petstore-ui --auth-mode login --query value -o tsv) || exit 1
+          test -n "$product" && test -n "$pet" && test -n "$order"
+          {
+            echo "product=$product"
+            echo "pet=$pet"
+            echo "order=$order"
+          } >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
 
