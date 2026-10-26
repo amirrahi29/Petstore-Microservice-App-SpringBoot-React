@@ -1,8 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { startCartSync } from "./cartSync";
 import cartReducer from "./cartSlice";
 import catalogReducer from "./catalogSlice";
-
-const KEY = "petstore_cart";
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +10,4 @@ export const store = configureStore({
   },
 });
 
-store.subscribe(() => {
-  localStorage.setItem(KEY, JSON.stringify(store.getState().cart.items));
-});
+startCartSync(store);

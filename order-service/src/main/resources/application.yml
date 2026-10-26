@@ -11,3 +11,10 @@ spring:
             selects:
               - key-filter: "*"
                 label-filter: order-service
+
+app:
+  cosmos:
+    endpoint: ${COSMOS_ENDPOINT:https://petstore-cosmos.documents.azure.com:443/}
+    key: ${COSMOS_KEY:}
+    database: ${COSMOS_DATABASE:petstore}
+    container: ${COSMOS_CONTAINER:cart}

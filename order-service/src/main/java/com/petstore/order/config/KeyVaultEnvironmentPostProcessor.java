@@ -1,5 +1,6 @@
 package com.petstore.order.config;
 
+import com.azure.core.exception.ResourceNotFoundException;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
@@ -44,6 +45,13 @@ public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcesso
             Map<String, Object> secrets = new LinkedHashMap<>();
             secrets.put("spring.datasource.username", required(client, "username"));
             secrets.put("spring.datasource.password", required(client, "password"));
+            if (environment.getProperty("app.cosmos.key") == null
+                    || environment.getProperty("app.cosmos.key").isBlank()) {
+                String cosmosKey = optional(client, "cosmos-key");
+                if (cosmosKey != null) {
+                    secrets.put("app.cosmos.key", cosmosKey);
+                }
+            }
             environment.getPropertySources().addFirst(new MapPropertySource(SOURCE, secrets));
         } catch (IllegalStateException ex) {
             throw ex;
@@ -61,5 +69,17 @@ public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcesso
             throw new IllegalStateException("Azure Key Vault secret '" + name + "' is empty");
         }
         return value;
+    }
+
+    private static String optional(SecretClient client, String name) {
+        try {
+            String value = client.getSecret(name).getValue();
+            if (value == null || value.isBlank()) {
+                return null;
+            }
+            return value;
+        } catch (ResourceNotFoundException ex) {
+            return null;
+        }
     }
 }

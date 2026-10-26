@@ -1,20 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const KEY = "petstore_cart";
-
-function readCart() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(KEY) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 const cartSlice = createSlice({
   name: "cart",
-  initialState: { items: readCart() },
+  initialState: { items: [] },
   reducers: {
+    replaceItems(state, action) {
+      state.items = Array.isArray(action.payload) ? action.payload : [];
+    },
     addItem(state, action) {
       const product = action.payload;
       const found = state.items.find((item) => item.id === product.id);
@@ -55,7 +47,7 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addItem, removeItem, setQuantity, clearCart } = cartSlice.actions;
+export const { replaceItems, addItem, removeItem, setQuantity, clearCart } = cartSlice.actions;
 
 export function selectCartItems(state) {
   return state.cart.items;

@@ -72,6 +72,11 @@
             <version>1.15.4</version>
         </dependency>
         <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-cosmos</artifactId>
+            <version>4.67.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.azure.spring</groupId>
             <artifactId>spring-cloud-azure-starter-appconfiguration-config</artifactId>
         </dependency>
