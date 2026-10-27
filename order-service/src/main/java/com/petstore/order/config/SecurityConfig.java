@@ -1,5 +1,6 @@
 package com.petstore.order.config;
 
+import com.petstore.order.security.EntraJwtAuthenticator;
 import com.petstore.order.security.JwtAuthFilter;
 import com.petstore.order.security.JwtService;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,15 +30,27 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http, JwtService jwtService, EntraJwtAuthenticator entra) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .logout(logout -> logout.logoutSuccessHandler((request, response, authentication) -> {
+                    String referer = request.getHeader("Referer");
+                    String next = "/login/entra";
+                    if (referer != null && referer.startsWith("http://localhost:3000")) {
+                        next += "?return=" + URLEncoder.encode("http://localhost:3000/", StandardCharsets.UTF_8);
+                    }
+                    response.sendRedirect(next);
+                }).invalidateHttpSession(true))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/", "/health", "/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/", "/index.html", "/health", "/api/health").permitAll()
+                        .requestMatchers("/login/entra", "/login/oauth2/**").permitAll()
+                        .requestMatchers("/static/**", "/favicon.ico", "/manifest.json", "/logo192.png", "/logo512.png", "/robots.txt").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/entra/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasRole("ADMIN")
                         .requestMatchers("/api/orders/**").authenticated()
                         .anyRequest().authenticated())
@@ -50,7 +65,7 @@ public class SecurityConfig {
                             response.setContentType("application/json");
                             response.getWriter().write("{\"message\":\"Forbidden\"}");
                         }))
-                .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthFilter(jwtService, entra), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -74,6 +89,7 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

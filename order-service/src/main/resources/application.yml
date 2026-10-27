@@ -4,8 +4,13 @@ server:
 spring:
   application:
     name: order-service
-  config:
-    import: azureAppConfiguration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # iss from the tenant discovery document. petstorecustomers.onmicrosoft.com does not resolve.
+          issuer-uri: https://9f8d97a4-9691-45df-8fb9-8c215ff7b7be.ciamlogin.com/9f8d97a4-9691-45df-8fb9-8c215ff7b7be/v2.0
+          jwk-set-uri: https://petstorecustomers.ciamlogin.com/9f8d97a4-9691-45df-8fb9-8c215ff7b7be/discovery/v2.0/keys
   datasource:
     url: jdbc:postgresql://petstore-server-name.postgres.database.azure.com/petstore
   jpa:
@@ -26,6 +31,8 @@ spring:
                 label-filter: order-service
 
 app:
+  entra:
+    client-id: ${ENTRA_CLIENT_ID:}
   keyvault:
     endpoint: https://db-credentials-petstore.vault.azure.net/
   jwt:
@@ -38,3 +45,9 @@ app:
     key: ${COSMOS_KEY:}
     database: ${COSMOS_DATABASE:petstore}
     container: ${COSMOS_CONTAINER:cart}
+---
+spring:
+  config:
+    activate:
+      on-profile: "!local"
+    import: azureAppConfiguration

@@ -38,7 +38,7 @@ public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcesso
     }
 
     private void apply(ConfigurableEnvironment environment) {
-        if (environment.getPropertySources().contains(SOURCE)) {
+        if (environment.getPropertySources().contains(SOURCE) || local(environment)) {
             return;
         }
         String endpoint = environment.getProperty("app.keyvault.endpoint");
@@ -73,6 +73,21 @@ public class KeyVaultEnvironmentPostProcessor implements EnvironmentPostProcesso
                             + ". Sign in with Azure CLI (az login) using an account that can get secrets.",
                     ex);
         }
+    }
+
+    private static boolean local(ConfigurableEnvironment environment) {
+        for (String profile : environment.getActiveProfiles()) {
+            if ("local".equals(profile)) {
+                return true;
+            }
+        }
+        String configured = environment.getProperty("spring.profiles.active", "");
+        for (String profile : configured.split(",")) {
+            if ("local".equals(profile.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String jwtSecret(ConfigurableEnvironment environment) {

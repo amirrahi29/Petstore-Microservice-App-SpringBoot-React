@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 
-const backend = window.location.port === '3000' ? 'http://localhost:8083' : '';
+const backend = window.location.port === '3000'
+  ? 'http://localhost:8080'
+  : 'https://captured-feature-hearing-scholar.trycloudflare.com';
 
 function App() {
   const [status, setStatus] = useState('loading');
@@ -36,7 +38,7 @@ function App() {
         {status === 'signed-out' && (
           <>
             <p className="lead">Sign in with your customer account to see the demo list.</p>
-            <a className="btn" href={`${backend}/login/entra${backend ? '?return=http://localhost:3000/' : ''}`}>Sign in with Entra ID</a>
+            <a className="btn" href={`${backend}/login/entra`}>Sign in with Entra ID</a>
           </>
         )}
         {status === 'signed-in' && (

@@ -1,6 +1,25 @@
 server:
   port: ${PORT:8080}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        same-site: none
+        secure: true
 
 spring:
   application:
     name: Intra-ID
+  config:
+    import: optional:file:/Users/amir/Desktop/Petstore/order-service/config/application-local.yml
+  web:
+    resources:
+      static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/
+
+app:
+  entra:
+    client-id: d61edc16-5f84-4246-8bb1-2353a3ec516d
+    client-secret: ${spring.security.oauth2.client.registration.azure.client-secret:}
+    redirect-uri: https://captured-feature-hearing-scholar.trycloudflare.com
+    issuer-uri: https://9f8d97a4-9691-45df-8fb9-8c215ff7b7be.ciamlogin.com/9f8d97a4-9691-45df-8fb9-8c215ff7b7be/v2.0
+    frontend-url: https://intra-web-application-agb3cearbmcef5ej.westus3-01.azurewebsites.net/

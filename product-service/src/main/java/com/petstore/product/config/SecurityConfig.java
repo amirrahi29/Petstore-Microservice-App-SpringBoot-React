@@ -1,5 +1,6 @@
 package com.petstore.product.config;
 
+import com.petstore.product.security.EntraJwtAuthenticator;
 import com.petstore.product.security.JwtAuthFilter;
 import com.petstore.product.security.JwtService;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +25,8 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http, JwtService jwtService, EntraJwtAuthenticator entra) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
@@ -47,7 +49,7 @@ public class SecurityConfig {
                             response.setContentType("application/json");
                             response.getWriter().write("{\"message\":\"Forbidden\"}");
                         }))
-                .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthFilter(jwtService, entra), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

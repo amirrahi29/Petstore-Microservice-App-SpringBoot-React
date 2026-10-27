@@ -17,9 +17,11 @@ import java.util.List;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final EntraJwtAuthenticator entra;
 
-    public JwtAuthFilter(JwtService jwtService) {
+    public JwtAuthFilter(JwtService jwtService, EntraJwtAuthenticator entra) {
         this.jwtService = jwtService;
+        this.entra = entra;
     }
 
     @Override
@@ -31,8 +33,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
+        String token = header.substring(7);
         try {
-            Claims claims = jwtService.parse(header.substring(7));
+            Claims claims = jwtService.parse(token);
             String role = claims.get("role", String.class);
             if (claims.getSubject() != null && role != null) {
                 Long userId = claims.get("userId") instanceof Number number ? number.longValue() : null;
@@ -44,7 +47,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (JwtException | IllegalArgumentException ex) {
-            SecurityContextHolder.clearContext();
+            if (!entra.authenticate(token)) {
+                SecurityContextHolder.clearContext();
+            }
         }
 
         filterChain.doFilter(request, response);

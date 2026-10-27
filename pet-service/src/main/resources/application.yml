@@ -1,6 +1,12 @@
 spring:
   application:
     name: pet-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://9f8d97a4-9691-45df-8fb9-8c215ff7b7be.ciamlogin.com/9f8d97a4-9691-45df-8fb9-8c215ff7b7be/v2.0
+          jwk-set-uri: https://petstorecustomers.ciamlogin.com/9f8d97a4-9691-45df-8fb9-8c215ff7b7be/discovery/v2.0/keys
   config:
     import: azureAppConfiguration
   cloud:
@@ -11,3 +17,7 @@ spring:
             selects:
               - key-filter: "*"
                 label-filter: pet-service
+
+app:
+  entra:
+    client-id: ${ENTRA_CLIENT_ID:}
