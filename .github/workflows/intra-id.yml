@@ -16,4 +16,5 @@ permissions:
 jobs:
   deploy:
     uses: ./.github/workflows/intra-web-deploy.yml
-    secrets: inherit
+    secrets:
+      INTRA_WEBAPP_PUBLISH_PROFILE: ${{ secrets.INTRA_WEBAPP_PUBLISH_PROFILE }}

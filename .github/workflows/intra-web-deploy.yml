@@ -2,6 +2,9 @@ name: Deploy intra web app
 
 on:
   workflow_call:
+    secrets:
+      INTRA_WEBAPP_PUBLISH_PROFILE:
+        required: true
 
 permissions:
   contents: read
@@ -52,6 +55,5 @@ jobs:
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: intra-web-application
           publish-profile: ${{ secrets.INTRA_WEBAPP_PUBLISH_PROFILE }}
           package: ${{ steps.jar.outputs.path }}
