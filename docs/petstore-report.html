@@ -247,6 +247,7 @@
       <li><span class="n">19</span> Azure Function HTTP trigger</li>
       <li><span class="n">20</span> Microsoft Entra External ID</li>
       <li><span class="n">21</span> Order item reserver</li>
+      <li><span class="n">22</span> Azure Container Apps</li>
     </ol>
     <h2>Deployed applications</h2>
     <table>
@@ -817,6 +818,49 @@
   <figure class="figure">
     <img src="figures/logic-app-email1.png" alt="Gmail spam folder showing the Logic App email amir subject" />
     <figcaption><strong>Figure 63.</strong> Gmail, Spam, message “amir subject” received at 2:12 pm from the Logic App email action.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>22. Azure Container Apps</h2>
+  <p>Container App <span class="mono">petstore-container-app</span> is a second host for the order item reserver image. It runs in <span class="mono">DefaultResourceGroup-USW3</span>, West US 3, environment <span class="mono">managedEnvironment-DefaultResource-8855</span>. The four records below are deploy, ingress, scale, blue-green traffic, and the order API address used as application configuration. Sections 1 through 21 are unchanged.</p>
+
+  <h3>Deploy a container app</h3>
+  <p>The first overview shows the app Running in West US 3 before ingress was turned on. The resource group is <span class="mono">DefaultResourceGroup-USW3</span>. The environment type is Workload profiles, and the development stack is Generic. Application URL says Ingress disabled, so there was no public address yet.</p>
+  <figure class="figure">
+    <img src="figures/container-app1.png" alt="Container App petstore-container-app overview, Running, ingress disabled" />
+    <figcaption><strong>Figure 64.</strong> Overview of <span class="mono">petstore-container-app</span>. Status Running, location West US 3, ingress disabled.</figcaption>
+  </figure>
+  <p>Ingress was then enabled for external HTTP traffic. The target port is <span class="mono">8084</span>, which is the port the order item reserver container listens on. Transport is HTTP/1. Insecure connections are off, so callers use HTTPS. The endpoint is <span class="mono">https://petstore-container-app.jollyhill-a23e8734.westus3.azurecontainerapps.io</span>.</p>
+  <figure class="figure">
+    <img src="figures/container-app3.png" alt="Ingress blade with external HTTP and target port 8084" />
+    <figcaption><strong>Figure 65.</strong> Ingress for <span class="mono">petstore-container-app</span>. External traffic, HTTP, target port 8084.</figcaption>
+  </figure>
+  <p>Opening that hostname returns the plain text <span class="mono">order-item-reserver is running</span>. That is the same home response as the App Service copy of this application, so the container behind the ingress is the reserver image.</p>
+  <figure class="figure">
+    <img src="figures/container-app2.png" alt="Browser showing order-item-reserver is running on the Container Apps hostname" />
+    <figcaption><strong>Figure 66.</strong> <span class="mono">https://petstore-container-app.jollyhill-a23e8734.westus3.azurecontainerapps.io</span> after ingress. The page body is <span class="mono">order-item-reserver is running</span>.</figcaption>
+  </figure>
+
+  <h3>Auto-scaling</h3>
+  <p>Scale is set on revision <span class="mono">petstore-container-app--0000001</span>. Minimum replicas are 1 and maximum replicas are 3, so the app stays up and can add two more replicas. The HTTP scale rule is named <span class="mono">http-requests</span>, type HTTP scaling, and the concurrent request threshold is 10. Cooldown is 300 seconds and the polling interval is 30 seconds. The screenshot shows one replica running.</p>
+  <figure class="figure">
+    <img src="figures/container-app4.png" alt="Scale blade with min 1, max 3, and HTTP rule http-requests at 10 concurrent requests" />
+    <figcaption><strong>Figure 67.</strong> Scale for <span class="mono">petstore-container-app</span>. Rule <span class="mono">http-requests</span>, 10 concurrent requests, min 1, max 3.</figcaption>
+  </figure>
+
+  <h3>Blue-green deployment</h3>
+  <p>Container Apps has no separate blue-green switch. Two revisions carry the traffic. <span class="mono">petstore-container-app--0000001</span>, created 27 October 2026 at 15:40, is the blue revision. <span class="mono">petstore-container-app--green</span>, created at 15:59, is the green revision. Both are Running and Active, each with one replica, and each receives 50 percent of traffic.</p>
+  <figure class="figure">
+    <img src="figures/container-app-blue-green-deployment.png" alt="Active revisions list with green and 0000001 each at 50 percent traffic" />
+    <figcaption><strong>Figure 68.</strong> Revisions and replicas. <span class="mono">petstore-container-app--green</span> and <span class="mono">petstore-container-app--0000001</span> are both Running at 50 percent traffic.</figcaption>
+  </figure>
+
+  <h3>Application configuration</h3>
+  <p>The order API address used for this container app is a small web app, <span class="mono">petstore-dummy-order-api</span>, in West US 3. It has no database. Its root path returns a fixed JSON list of two sample orders: dog food, quantity 2, and cat toy, quantity 1. That URL is the value stored as <span class="mono">petstore.order-api-url</span> on revision <span class="mono">petstore-container-app--dummy-orders</span>.</p>
+  <figure class="figure">
+    <img src="figures/container-app5.png" alt="Browser showing the dummy order API JSON list" />
+    <figcaption><strong>Figure 69.</strong> <span class="mono">https://petstore-dummy-order-api.azurewebsites.net</span>. The response is the sample order list.</figcaption>
   </figure>
 </section>
 
