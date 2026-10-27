@@ -237,6 +237,15 @@
       <li><span class="n">09</span> Azure Container Registry</li>
       <li><span class="n">10</span> Azure App Service</li>
       <li><span class="n">11</span> Azure Traffic Manager</li>
+      <li><span class="n">12</span> Azure App Configuration</li>
+      <li><span class="n">13</span> Deployment slots</li>
+      <li><span class="n">14</span> Pet Store monitoring</li>
+      <li><span class="n">15</span> Application Insights</li>
+      <li><span class="n">16</span> Azure Cosmos DB</li>
+      <li><span class="n">17</span> PostgreSQL products, later query</li>
+      <li><span class="n">18</span> App Service scale-out</li>
+      <li><span class="n">19</span> Azure Function HTTP trigger</li>
+      <li><span class="n">20</span> Microsoft Entra External ID</li>
     </ol>
     <h2>Deployed applications</h2>
     <table>
@@ -644,6 +653,91 @@
   <figure class="figure">
     <img src="figures/appstorage-scaling.png" alt="App Service plan scale out blade with Rules Based selected" />
     <figcaption><strong>Figure 41.</strong> Scale out for <span class="mono">ASP-PetstoreResourceGroup-9881</span>. Rules Based is selected. The note on the blade says rule-based scaling is ignored if Automatic scaling is enabled.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>19. Azure Function HTTP trigger</h2>
+  <p>Function App <span class="mono">petstore-function</span> in <span class="mono">petstore-resource-group</span> hosts the HTTP trigger <span class="mono">petstore-http</span>. The function is packaged as <span class="mono">petstore-http-1.0-SNAPSHOT.jar</span>, entry point <span class="mono">com.petstore.Function.run</span>. <span class="mono">function.json</span> binds an anonymous HTTP trigger named <span class="mono">req</span> that accepts GET and POST. Code + Test runs the function in the portal and returns the response beside the log.</p>
+  <figure class="figure">
+    <img src="figures/azure-function-http-trigger-test-output.png" alt="Azure portal Code and Test for petstore-http returning Hello from petstore-http" />
+    <figcaption><strong>Figure 42.</strong> Code + Test for <span class="mono">petstore-http</span>. The Test/Run output is HTTP 200 with the body <span class="mono">Hello from petstore-http</span>. The log shows the host authenticated, the Java worker invoked the function, and the execution succeeded.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>20. Microsoft Entra External ID</h2>
+  <p>Customer sign-in uses a dedicated Microsoft Entra External ID tenant, separate from the workforce directory that owns the Petstore subscription. The paid store is registered there as <span class="mono">petstore-customer-app</span>. Customers authenticate with the <span class="mono">signupsignin</span> user flow. The Spring Boot application on the developer machine exchanges the authorization code, and the React demo published to App Service calls that local application through a public HTTPS tunnel. Secret values are not printed.</p>
+  <table>
+    <thead><tr><th>Requirement</th><th>Result in this setup</th></tr></thead>
+    <tbody>
+      <tr><td>Dedicated External ID tenant</td><td><span class="mono">petstore-tenant</span>, primary domain <span class="mono">petstorecustomers.onmicrosoft.com</span></td></tr>
+      <tr><td>Paid store application</td><td><span class="mono">petstore-customer-app</span>, client ID <span class="mono">d61edc16-5f84-4246-8bb1-2353a3ec516d</span></td></tr>
+      <tr><td>User flow, identity provider, attributes</td><td><span class="mono">signupsignin</span> with email and password local accounts</td></tr>
+      <tr><td>Optional claims</td><td><span class="mono">email</span>, <span class="mono">given_name</span>, and <span class="mono">family_name</span>, requested with scopes <span class="mono">openid profile email</span></td></tr>
+      <tr><td>OAuth 2.0 / OpenID Connect in Spring Boot</td><td>Authorization code with PKCE, token exchange, and a server session</td></tr>
+      <tr><td>Local authentication test</td><td>Completed against the local Spring Boot process before the cloud test</td></tr>
+      <tr><td>Azure deployment with External ID</td><td>React demo on <span class="mono">intra-web-application</span>, Java backend kept local</td></tr>
+      <tr><td>Production redirect URI</td><td>Three web redirect URIs, including the App Service origin and the tunnel origin</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Dedicated tenant for customer identities</h3>
+  <p>The customer directory is <span class="mono">petstore-tenant</span>. Its tenant ID is <span class="mono">9f8d97a4-9691-45df-8fb9-8c215ff7b7be</span> and its primary domain is <span class="mono">petstorecustomers.onmicrosoft.com</span>. The license shown on the overview is Microsoft Entra ID Free. Sign-in for this directory is served from <span class="mono">ciamlogin.com</span>, which is the External ID endpoint, rather than from the workforce login host. The tenant overview records 2 users and 2 applications.</p>
+  <figure class="figure">
+    <img src="figures/intra-id-login-6.png" alt="Entra overview for petstore-tenant with the customer domain and tenant ID" />
+    <figcaption><strong>Figure 43.</strong> Overview of <span class="mono">petstore-tenant</span>. Name, tenant ID, primary domain <span class="mono">petstorecustomers.onmicrosoft.com</span>, 2 users, and 2 applications.</figcaption>
+  </figure>
+  <p>The two directory users are both members. <span class="mono">amirrahi29@petstorecustomers.onmicrosoft.com</span> is the local customer account used in the sign-in test. <span class="mono">amir_rahi_epam.com#EXT#@petstorecustomers.onmicrosoft.com</span> is the external administrator invited from the workforce account. Customer identities therefore live in this tenant, and the workforce user is only an external member for administration.</p>
+  <figure class="figure">
+    <img src="figures/intra-id-login-5.png" alt="Users blade for petstore-tenant listing the local customer and the external administrator" />
+    <figcaption><strong>Figure 44.</strong> Users in <span class="mono">petstore-tenant</span>. Two members: the external administrator and <span class="mono">amirrahi29@petstorecustomers.onmicrosoft.com</span>.</figcaption>
+  </figure>
+
+  <h3>Paid store application registration</h3>
+  <p>The store application in this tenant is <span class="mono">petstore-customer-app</span>. It was created on 27 October 2026. The application (client) ID is <span class="mono">d61edc16-5f84-4246-8bb1-2353a3ec516d</span> and the object ID is <span class="mono">77cf9188-81c6-42fb-98a4-1564e07a24ca</span>. Supported account type is this organization only. The second registration, <span class="mono">b2c-extensions-app</span>, is the platform application Entra creates for user-attribute storage and is left unchanged.</p>
+  <figure class="figure">
+    <img src="figures/intra-id-login-7.png" alt="App registrations in petstore-tenant showing petstore-customer-app" />
+    <figcaption><strong>Figure 45.</strong> App registrations in <span class="mono">petstore-tenant</span>. <span class="mono">petstore-customer-app</span> is listed with its client ID, created on 27 October 2026, and certificates and secrets marked Current.</figcaption>
+  </figure>
+  <p>The application overview shows the registration is Activated. Client credentials are 0 certificates and 2 secrets. A secret is required because this is a web application: the Spring Boot token request sends that secret with the authorization code. Redirect URIs are 3 web, 0 single-page, and 0 public client. Those three web URIs are the local callback <span class="mono">http://localhost:8083/login/oauth2/code/azure</span>, the deployed site origin <span class="mono">https://intra-web-application-agb3cearbmcef5ej.westus3-01.azurewebsites.net/</span>, and the tunnel origin <span class="mono">https://captured-feature-hearing-scholar.trycloudflare.com</span> with no trailing slash.</p>
+  <figure class="figure">
+    <img src="figures/intra-id-login-8.png" alt="Overview of petstore-customer-app with client ID, two secrets, and three web redirect URIs" />
+    <figcaption><strong>Figure 46.</strong> Overview of <span class="mono">petstore-customer-app</span>. Client ID, directory tenant ID, state Activated, 2 secrets, and 3 web redirect URIs.</figcaption>
+  </figure>
+
+  <h3>User flow, identity provider, and attributes</h3>
+  <p>The customer journey is the <span class="mono">signupsignin</span> user flow. The authorize request selects it with <span class="mono">p=signupsignin</span> and sends <span class="mono">prompt=login</span>, so Entra asks for credentials instead of silently reusing a session. The identity provider for this flow is the local email-and-password account in the External ID tenant. The first page collects the email address. The second page collects the password for that account. Email is both the sign-in identifier and a collected attribute. Given name, surname, and display name are the profile attributes associated with the same user flow.</p>
+  <figure class="figure">
+    <img src="figures/intra-id-login-2.png" alt="Entra sign-in page for PETSTORE-TENANT with the customer email entered" />
+    <figcaption><strong>Figure 47.</strong> External ID sign-in hosted at <span class="mono">ciamlogin.com</span> for PETSTORE-TENANT. The customer email <span class="mono">amirrahi29@petstorecustomers.onmicrosoft.com</span> is entered. The address bar is the v2.0 authorize endpoint for client <span class="mono">d61edc16-5f84-4246-8bb1-2353a3ec516d</span>.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="figures/intra-id-login-3.png" alt="Entra password page for the customer account" />
+    <figcaption><strong>Figure 48.</strong> Password step for the same account. Entra accepted the email and is collecting the local-account password. Forgot password is offered by the user flow.</figcaption>
+  </figure>
+
+  <h3>Optional claims</h3>
+  <p>The customer application is configured so the ID token can carry <span class="mono">email</span>, <span class="mono">given_name</span>, and <span class="mono">family_name</span>. The sign-in request asks for those claims by sending the scopes <span class="mono">openid</span>, <span class="mono">profile</span>, and <span class="mono">email</span>. That scope list is part of the authorize URL in Figure 47 and Figure 48. The Spring Boot callback reads the ID token after the code exchange and keeps the browser session only when the token is present. The portal Token configuration blade is not one of these screenshots. The app registration menu in Figure 46 includes Token configuration, and the authorize request shows the scopes that pull the optional profile claims.</p>
+
+  <h3>OAuth 2.0 and OpenID Connect in Spring Boot</h3>
+  <p>The Intra ID backend is a Java 17 Gradle Spring Boot application, <span class="mono">com.intra.id</span>, running locally with <span class="mono">bootRun</span> on port 8080. It is the confidential client for <span class="mono">petstore-customer-app</span>. <span class="mono">GET /login/entra</span> starts the authorization-code flow with a PKCE S256 challenge and redirects the browser to the tenant authorize endpoint. Entra returns the code to the tunnel origin, which is the registered redirect URI. The application posts that code, the PKCE verifier, the client ID, and the client secret to the v2.0 token endpoint. The secret is read from local configuration and is not stored in the repository. On a successful ID token the server marks the HTTP session signed in and sends the browser back to the frontend. <span class="mono">GET /api/entra/items</span> returns the demo rows Collar 12, Leash 8, and Bowl 5 only for that session. <span class="mono">POST /logout</span> invalidates the session. The session cookie is <span class="mono">SameSite=None</span> and <span class="mono">Secure</span>, and cross-origin calls from the App Service hostname are allowed with credentials, so the deployed page can use the local session.</p>
+
+  <h3>Local authentication test</h3>
+  <p>The same flow was exercised locally before the cloud test. The React dev server on port 3000 sent the browser to the Spring Boot sign-in endpoint, Entra completed the user flow, and the demo list was returned to the local page. Logout returned the browser to the sign-in form because <span class="mono">prompt=login</span> forces a fresh credential prompt. Those local pages are not in this screenshot set. Figures 47 through 50 are the later run from the deployed site, which uses the same application registration, the same user flow, and the same token exchange.</p>
+
+  <h3>Deployment to Azure with External ID</h3>
+  <p>The customer demo frontend is the React application in <span class="mono">Intra-ID/intra-frontend</span>. GitHub Actions workflow <span class="mono">intra-frontend.yml</span> on <span class="mono">main</span> of <span class="mono">amirrahi29/Petstore-Microservice-App-SpringBoot-React</span> builds that application and deploys it to App Service <span class="mono">intra-web-application</span> in <span class="mono">petstore-resource-group</span>, West US 3, plan <span class="mono">ASP-petstoreresourcegroup-86dc</span>. Publishing for that app is Code. The app was also set to the Java 17 stack while the Spring Boot package was being prepared. The package that is live is the React frontend: the site serves the Pet Store page, and the Java Intra ID process was not deployed. It stays on the developer machine at port 8080. A later frontend publish pointed the page at the public tunnel so sign-in and the items API leave the App Service host and reach that local process.</p>
+  <figure class="figure">
+    <img src="figures/intra-id-login-1.png" alt="Deployed Pet Store Entra demo on the Azure App Service hostname, signed out" />
+    <figcaption><strong>Figure 49.</strong> <span class="mono">https://intra-web-application-agb3cearbmcef5ej.westus3-01.azurewebsites.net</span> before sign-in. The page is the deployed React demo, with the header Pet Store / Entra ID Demo and the button Sign in with Entra ID.</figcaption>
+  </figure>
+
+  <h3>Production redirect URI</h3>
+  <p>Entra accepts a redirect only when it matches a URI on the application. Figure 46 records three web redirect URIs. The local development callback remains <span class="mono">http://localhost:8083/login/oauth2/code/azure</span>. The deployed site origin <span class="mono">https://intra-web-application-agb3cearbmcef5ej.westus3-01.azurewebsites.net/</span> is registered for the cloud frontend. The local Java process is not reachable from that site on <span class="mono">localhost</span>, so a public HTTPS tunnel fronts port 8080. An ngrok tunnel at <span class="mono">https://discount-tipped-hurray.ngrok-free.dev</span> answered with the free-plan browser warning page, which would replace the OAuth redirect. The working tunnel is <span class="mono">https://captured-feature-hearing-scholar.trycloudflare.com</span>, registered with <span class="mono">https://</span> and no trailing slash, and that exact origin is the <span class="mono">redirect_uri</span> sent by the Spring Boot application. After the password in Figure 48 is accepted, Entra returns the browser to that URI, the local application creates the session, and the browser lands on the App Service site already signed in.</p>
+  <figure class="figure">
+    <img src="figures/intra-id-login-4.png" alt="Deployed Pet Store page after Entra sign-in, showing the demo list and Logout" />
+    <figcaption><strong>Figure 50.</strong> The same App Service hostname after the External ID sign-in. The session is authenticated: the demo list shows Collar 12, Leash 8, and Bowl 5, and Logout is available. The sign-in button is gone.</figcaption>
   </figure>
 </section>
 
