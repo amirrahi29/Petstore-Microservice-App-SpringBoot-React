@@ -1,0 +1,17 @@
+name: intra-frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Intra-ID/intra-frontend/**'
+      - '.github/workflows/intra-frontend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/intra-web-deploy.yml
+    secrets: inherit

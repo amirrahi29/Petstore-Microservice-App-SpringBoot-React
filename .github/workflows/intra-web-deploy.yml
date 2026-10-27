@@ -1,0 +1,57 @@
+name: Deploy intra web app
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: intra-web-application
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: Intra-ID/intra-frontend/package-lock.json
+
+      - name: Build React frontend
+        working-directory: Intra-ID/intra-frontend
+        run: npm ci && npm run build
+
+      - name: Add the frontend to the Spring Boot app
+        working-directory: Intra-ID
+        run: |
+          rm -rf src/main/resources/static
+          mkdir -p src/main/resources/static
+          cp -R intra-frontend/build/. src/main/resources/static/
+
+      - name: Build the Spring Boot jar
+        working-directory: Intra-ID
+        run: chmod +x ./gradlew && ./gradlew bootJar --no-daemon
+
+      - name: Locate the jar
+        id: jar
+        run: |
+          jar=$(find Intra-ID/build/libs -type f -name '*.jar' ! -name '*-plain.jar' | head -n 1)
+          test -n "$jar"
+          echo "path=$jar" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: intra-web-application
+          publish-profile: ${{ secrets.INTRA_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ steps.jar.outputs.path }}
