@@ -29,7 +29,7 @@ jobs:
 
       - name: Build React frontend
         working-directory: Intra-ID/intra-frontend
-        run: npm ci && npm run build
+        run: npm install && npm run build
 
       - name: Add the frontend to the Spring Boot app
         working-directory: Intra-ID
