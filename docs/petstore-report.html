@@ -246,6 +246,7 @@
       <li><span class="n">18</span> App Service scale-out</li>
       <li><span class="n">19</span> Azure Function HTTP trigger</li>
       <li><span class="n">20</span> Microsoft Entra External ID</li>
+      <li><span class="n">21</span> Order item reserver</li>
     </ol>
     <h2>Deployed applications</h2>
     <table>
@@ -738,6 +739,84 @@
   <figure class="figure">
     <img src="figures/intra-id-login-4.png" alt="Deployed Pet Store page after Entra sign-in, showing the demo list and Logout" />
     <figcaption><strong>Figure 50.</strong> The same App Service hostname after the External ID sign-in. The session is authenticated: the demo list shows Collar 12, Leash 8, and Bowl 5, and Logout is available. The sign-in button is gone.</figcaption>
+  </figure>
+</section>
+
+<section class="section">
+  <h2>21. Order item reserver</h2>
+  <p>The order item reserver is a separate Java 17 Spring Boot application, <span class="mono">order-item-reserver</span>. It listens on the Service Bus queue <span class="mono">order-item-reservations</span>, uploads to the <span class="mono">orderitems</span> storage account with exponential backoff, and posts a failure notification to the Logic App <span class="mono">order-item-reserver-email-fallback</span>. The five screenshots groups below are the portal record of that work. Sections 1 through 20 are unchanged.</p>
+
+  <h3>Modify and deploy the application</h3>
+  <p>Work item: modify and deploy the application. App Service <span class="mono">order-item-reserver</span> is the deployed reserver. It sits in <span class="mono">petstore-resource-group</span>, West US 3, on Linux plan <span class="mono">ASP-petstoreresourcegroup-868c</span> (B1). Publishing model is Container. Runtime status is Healthy, and the container image comes from <span class="mono">petstoreazurecontainerregistry.azurecr.io</span>.</p>
+  <figure class="figure">
+    <img src="figures/modify-deploy-application-1.png" alt="App Service overview for order-item-reserver, Running and Healthy" />
+    <figcaption><strong>Figure 51.</strong> Overview of web app <span class="mono">order-item-reserver</span>. Status Running, runtime Healthy, default domain <span class="mono">order-item-reserver.azurewebsites.net</span>.</figcaption>
+  </figure>
+  <p>The same deployment answers on the public hostname. Opening the root path returns the plain text <span class="mono">order-item-reserver is running</span>, which is the home controller added for this release. That response is HTTP 200, so the container that was pushed is the build that contains the controller.</p>
+  <figure class="figure">
+    <img src="figures/modify-deploy-application-2.png" alt="Browser showing order-item-reserver is running" />
+    <figcaption><strong>Figure 52.</strong> <span class="mono">https://order-item-reserver.azurewebsites.net/</span> after the new image was deployed. The page body is <span class="mono">order-item-reserver is running</span>.</figcaption>
+  </figure>
+  <p>Work item: modify and deploy the application. GitHub Actions workflow <span class="mono">order-item-reserver</span> on <span class="mono">main</span> built that image and pushed it to the registry. Run 40477315156, job <span class="mono">push</span>, succeeded in 56 seconds. Checkout, Azure login, ACR login, Docker Buildx, and Build and push all completed.</p>
+  <figure class="figure">
+    <img src="figures/service-bus-app-deploy1.png" alt="Successful GitHub Actions run for the order-item-reserver workflow" />
+    <figcaption><strong>Figure 53.</strong> Actions run “Add the order-item-reserver workflow so GitHub Actions can publish it… #1”. The <span class="mono">push</span> job is green, including Build and push.</figcaption>
+  </figure>
+  <p>After that workflow published the image, the App Service overview still shows the same site Running and Healthy, with the container image from <span class="mono">petstoreazurecontainerregistry</span>. This is the deployed application the queue consumer runs in.</p>
+  <figure class="figure">
+    <img src="figures/service-bus-app-deploy2.png" alt="App Service order-item-reserver still Running and Healthy after the workflow" />
+    <figcaption><strong>Figure 54.</strong> <span class="mono">order-item-reserver</span> after the image publish. Publishing model Container, runtime status Healthy, location West US 3.</figcaption>
+  </figure>
+
+  <h3>Service Bus messaging and the order item reserver</h3>
+  <p>Work item: configure Azure Service Bus for application messaging. Namespace <span class="mono">petstore-sbns</span> is in <span class="mono">petstore-resource-group</span>, West US 3, pricing tier Basic, provisioning Succeeded. The host name is <span class="mono">petstore-sbns.servicebus.windows.net</span>. Local authentication is enabled. The request chart shows 14 successful requests and no server errors.</p>
+  <figure class="figure">
+    <img src="figures/service-bus-messaging1.png" alt="Service Bus namespace petstore-sbns overview with successful requests" />
+    <figcaption><strong>Figure 55.</strong> Overview of <span class="mono">petstore-sbns</span>. Tag <span class="mono">env: dev</span>. Incoming and outgoing message sums are 0 on the day chart; successful requests peak at 14.</figcaption>
+  </figure>
+  <p>The namespace has one queue, <span class="mono">order-item-reservations</span>, and its status is Active. Message count, active messages, dead-letter messages, and scheduled messages are 0 on this view. This is the queue name configured for the reserver.</p>
+  <figure class="figure">
+    <img src="figures/service-bus-messaging2.png" alt="petstore-sbns queue list showing order-item-reservations Active" />
+    <figcaption><strong>Figure 56.</strong> Queues on <span class="mono">petstore-sbns</span>. <span class="mono">order-item-reservations</span> is Active with 0 messages.</figcaption>
+  </figure>
+  <p>Work item: create and deploy the order item reserver. The deployed Spring Boot application is the consumer of this queue. The queue itself is Active in namespace <span class="mono">petstore-sbns</span>. Its URL is <span class="mono">https://petstore-sbns.servicebus.windows.net/order-item-reservations</span>. Max delivery count is 10, message time to live is 14 days, and the lock duration is 1 minute. Sessions, partitioning, and duplicate detection are disabled. At the time of this screenshot the queue held 0 active, scheduled, and dead-letter messages.</p>
+  <figure class="figure">
+    <img src="figures/service-bus-messaging3.png" alt="Queue order-item-reservations overview with delivery and lock settings" />
+    <figcaption><strong>Figure 57.</strong> Queue <span class="mono">order-item-reservations</span>. Status Active, max delivery count 10, lock duration 1 minute, size 0.0 KB of 1 GB.</figcaption>
+  </figure>
+  <p>A one-hour metric on the same queue shows one successful request and no server errors, user errors, or throttling. Incoming and outgoing message sums on that chart are 0. The namespace accepted the call that the reserver uses to reach this queue.</p>
+  <figure class="figure">
+    <img src="figures/service-bus-messaging4.png" alt="Queue metrics with one successful request and no errors" />
+    <figcaption><strong>Figure 58.</strong> One-hour metrics for <span class="mono">order-item-reservations</span>. Successful requests 1. Server errors, user errors, and throttled requests are 0.</figcaption>
+  </figure>
+
+  <h3>Blob upload retry</h3>
+  <p>Work item: implement a retry policy for blob storage uploads. Storage account <span class="mono">orderitems</span> is the account the reserver uploads to. It is a Standard general-purpose v2 account in West US 3, locally redundant, provisioning Succeeded, disk Available, created 27 October 2026 at 13:45. Secure transfer and storage account key access are enabled. Blob and container soft delete are enabled for 7 days. The application client uses exponential backoff when an upload is retried; this overview is the account that client is pointed at.</p>
+  <figure class="figure">
+    <img src="figures/blob-retry-plicy1.png" alt="Storage account orderitems overview in West US 3" />
+    <figcaption><strong>Figure 59.</strong> Overview of storage account <span class="mono">orderitems</span> in <span class="mono">petstore-resource-group</span>. Hot access tier, anonymous access disabled, public network access enabled from all networks.</figcaption>
+  </figure>
+  <p>Container <span class="mono">order-items</span> on that account holds one block blob, <span class="mono">Screenshot 2026-10-27 at 2.23.50 PM.png</span>, 2.13 MiB, access tier Hot, lease Available, last modified 27 October 2026 at 14:46. Authentication for the container blade is the account key. A stored blob here is the upload target used with the exponential retry client.</p>
+  <figure class="figure">
+    <img src="figures/blob-retry-plicy2.png" alt="Container order-items with one uploaded block blob" />
+    <figcaption><strong>Figure 60.</strong> Container <span class="mono">order-items</span>. One block blob, 2.13 MiB, lease Available.</figcaption>
+  </figure>
+
+  <h3>Fallback Logic App email</h3>
+  <p>Work item: create a fallback Logic App for email notification. Logic App <span class="mono">order-item-reserver-email-fallback</span> starts with “When an HTTP request is received” and then “Send an email (V2)”. The designer shows the workflow saved. The mail action is addressed to <span class="mono">amirrahi29@gmail.com</span>, with subject “amir subject” and body “amir message body”, and the connection is Outlook.</p>
+  <figure class="figure">
+    <img src="figures/logic-app-email3.png" alt="Logic App designer with HTTP trigger and Send an email, workflow saved" />
+    <figcaption><strong>Figure 61.</strong> Designer for <span class="mono">order-item-reserver-email-fallback</span>. The toast says the workflow was saved. Publish is available.</figcaption>
+  </figure>
+  <p>A draft run of that workflow on 27 October 2026 at 2:12 pm succeeded in 772 milliseconds. Both the HTTP trigger and Send an email (V2) show a green check. The email action output status code is 200. This is the fallback path the reserver calls when reservation processing fails.</p>
+  <figure class="figure">
+    <img src="figures/logic-app-email2.png" alt="Logic App run history showing a successful email send with status 200" />
+    <figcaption><strong>Figure 62.</strong> Run history. The 2:12 pm draft run succeeded. Send an email (V2) returned status 200 to <span class="mono">amirrahi29@gmail.com</span>.</figcaption>
+  </figure>
+  <p>The message from that run arrived in Gmail. The subject is “amir subject”, the sender is Amir Rahi via outlook.com, and the body is “amir message body”. Gmail placed it in Spam and noted that it resembles messages previously identified as spam. The send itself completed, which matches the status 200 in Figure 62.</p>
+  <figure class="figure">
+    <img src="figures/logic-app-email1.png" alt="Gmail spam folder showing the Logic App email amir subject" />
+    <figcaption><strong>Figure 63.</strong> Gmail, Spam, message “amir subject” received at 2:12 pm from the Logic App email action.</figcaption>
   </figure>
 </section>
 
