@@ -1,0 +1,29 @@
+server:
+  port: 8084
+
+spring:
+  profiles:
+    active: local
+  application:
+    name: order-item-reserver
+  cloud:
+    azure:
+      servicebus:
+        enabled: ${AZURE_SERVICEBUS_ENABLED:false}
+        connection-string: ${AZURE_SERVICEBUS_CONNECTION_STRING:}
+        entity-type: queue
+        entity-name: ${AZURE_SERVICEBUS_QUEUE_NAME:order-item-reservations}
+        processor:
+          auto-complete: false
+
+app:
+  storage:
+    connection-string: ${AZURE_STORAGE_CONNECTION_STRING:}
+    container-name: ${AZURE_STORAGE_CONTAINER:pet-container}
+    retry:
+      max-attempts: ${AZURE_STORAGE_RETRY_MAX_ATTEMPTS:4}
+      try-timeout-seconds: ${AZURE_STORAGE_RETRY_TRY_TIMEOUT_SECONDS:30}
+      delay-seconds: ${AZURE_STORAGE_RETRY_DELAY_SECONDS:1}
+      max-delay-seconds: ${AZURE_STORAGE_RETRY_MAX_DELAY_SECONDS:10}
+  notification:
+    logic-app-url: ${LOGIC_APP_EMAIL_URL:}
