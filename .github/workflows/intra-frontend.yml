@@ -13,6 +13,35 @@ permissions:
 
 jobs:
   deploy:
-    uses: ./.github/workflows/intra-web-deploy.yml
-    secrets:
-      INTRA_WEBAPP_PUBLISH_PROFILE: ${{ secrets.INTRA_WEBAPP_PUBLISH_PROFILE }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: Intra-ID/intra-frontend/package-lock.json
+
+      - name: Build React frontend
+        working-directory: Intra-ID/intra-frontend
+        run: npm install && npm run build
+
+      - name: Add a start script for App Service
+        working-directory: Intra-ID/intra-frontend/build
+        run: |
+          cat > package.json <<'EOF'
+          {
+            "name": "intra-frontend",
+            "private": true,
+            "scripts": {
+              "start": "npx --yes serve@14 -s . -l ${PORT:-8080}"
+            }
+          }
+          EOF
+
+      - name: Deploy frontend to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          publish-profile: ${{ secrets.INTRA_WEBAPP_PUBLISH_PROFILE }}
+          package: Intra-ID/intra-frontend/build

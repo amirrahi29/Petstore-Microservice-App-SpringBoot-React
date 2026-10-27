@@ -1,20 +1,14 @@
 name: intra-id
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'Intra-ID/**'
-      - '!Intra-ID/intra-frontend/**'
-      - '.github/workflows/intra-id.yml'
-      - '.github/workflows/intra-web-deploy.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
-    uses: ./.github/workflows/intra-web-deploy.yml
-    secrets:
-      INTRA_WEBAPP_PUBLISH_PROFILE: ${{ secrets.INTRA_WEBAPP_PUBLISH_PROFILE }}
+  skipped:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backend deploy is disabled
+        run: echo "Intra ID backend deploy is turned off. This workflow does not publish the Spring Boot app."
